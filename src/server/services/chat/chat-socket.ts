@@ -29,7 +29,7 @@ const DeleteSchema = z.object({ messageId: z.string().min(1).max(40), reason: z.
 /** Per-socket set of authors the viewer has blocked. */
 const blockCache = new WeakMap<NovaSocket, Set<string>>();
 
-function fail(ack: Ack | undefined, err: unknown, ctx: Record<string, unknown>) {
+function fail(ack: Ack<never> | undefined, err: unknown, ctx: Record<string, unknown>) {
   if (typeof ack !== 'function') return;
   if (err instanceof AppError) return ack({ ok: false, error: { code: err.code, message: err.message, details: err.details } });
   if (err instanceof z.ZodError) return ack({ ok: false, error: { code: 'VALIDATION', message: 'Invalid message' } });

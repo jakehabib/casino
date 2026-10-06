@@ -238,4 +238,26 @@ describe('Blackjack service', () => {
     expect(own.data.hands[0].outcome).toBe('BLACKJACK');
     await expect(act(b.id, { gameId: r.game.id, action: 'HIT', requestId: rid() })).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
+
+  it('opens a continuation shoe if the shoe runs out mid-round', async () => {
+    const u = await createTestUser();
+    await force(u.id, ['2S', '5D', '3H', 'KC']);
+    const g = await deal(u.id, { bet: 100, requestId: rid() });
+    const shoe = await prisma.cardShoe.findFirstOrThrow({ where: { userId: u.id, status: 'ACTIVE' } });
+    const total = (shoe.cards as string[]).length;
+    await prisma.cardShoe.update({ where: { id: shoe.id }, data: { position: total - 1 } });
+    await act(u.id, { gameId: g.game.id, action: 'HIT', requestId: rid() }); // last card of shoe 1
+    const r = await act(u.id, { gameId: g.game.id, action: 'HIT', requestId: rid() }); // from shoe 2
+    expect(r.game.hands[0].cards.length + r.game.dealer.cards.length).toBeGreaterThanOrEqual(6);
+    expect((await prisma.cardShoe.findUniqueOrThrow({ where: { id: shoe.id } })).status).toBe('RETIRED');
+    const active = await prisma.cardShoe.findMany({ where: { userId: u.id, status: 'ACTIVE' } });
+    expect(active).toHaveLength(1);
+    expect(active[0].position).toBeGreaterThanOrEqual(1);
+    const game = await prisma.blackjackGame.findUniqueOrThrow({ where: { id: g.game.id } });
+    const segs = (game.state as unknown as { segments: { shoeId: string; from: number; to: number }[] }).segments;
+    expect(segs.map((x) => x.shoeId)).toEqual([shoe.id, active[0].id]);
+    expect(segs[0].to).toBe(total); // (from reflects the manual position jump)
+    if (!r.game.settled) await act(u.id, { gameId: g.game.id, action: 'STAND', requestId: rid() });
+    expect((await verifyWalletIntegrity(u.id)).ok).toBe(true);
+  });
 });

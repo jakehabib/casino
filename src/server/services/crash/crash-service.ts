@@ -442,13 +442,16 @@ export async function cashout(userId: string, input: { slot: 0 | 1 }, now: numbe
   const post = new PostCommit();
   const out = await transaction(async (tx) => {
     const bet = await tx.crashBet.findFirst({
-      where: { userId, slot: input.slot, round: { status: { in: ['RUNNING', 'CRASHED', 'BETTING_LOCKED', 'WAITING'] } } },
+      where: { userId, slot: input.slot },
       orderBy: { createdAt: 'desc' },
       include: { round: true, user: { select: USER_SELECT } },
     });
-    if (!bet) throw new AppError('ACTION_UNAVAILABLE', 'You have no active bet in this slot.');
+    // A bet from a long-finished round is not "this round" any more.
+    const stale = bet && bet.round.status === 'SETTLED' && now - (bet.round.settledAt?.getTime() ?? 0) > INTERMISSION_MS * 2;
+    if (!bet || stale) throw new AppError('ACTION_UNAVAILABLE', 'You have no active bet in this slot.');
     if (bet.status === 'CASHED_OUT') return { bet: myBet(bet), duplicate: true };
-    if (bet.status !== 'ACTIVE') throw new AppError('ROUND_CLOSED', `Too late — crashed at ${(bet.round.crashPoint / 100).toFixed(2)}×.`);
+    if (bet.status === 'LOST') throw new AppError('ROUND_CLOSED', `Too late — crashed at ${(bet.round.crashPoint / 100).toFixed(2)}×.`);
+    if (bet.status !== 'ACTIVE') throw new AppError('ACTION_UNAVAILABLE', 'This bet is no longer active.');
     const round = bet.round;
     if (!round.startedAt || round.status === 'WAITING' || round.status === 'BETTING_LOCKED') {
       throw new AppError('ACTION_UNAVAILABLE', 'The rocket hasn’t launched yet.');
