@@ -105,7 +105,7 @@ export default function HomePage() {
       <LobbySection title="Popular now" subtitle="Seven games, built properly." icon={<Flame size={16} className="text-fg-subtle" />} href="/casino">
         <CardRow>
           {popular.map((g, i) => (
-            <div key={g.id} className="w-[44vw] max-w-[190px] shrink-0 snap-start sm:w-[180px] lg:w-auto lg:max-w-none">
+            <div key={g.id} className="w-[42vw] max-w-[188px] shrink-0 snap-start sm:w-[176px]">
               <GameCard game={g} favorite={fav.isFavorite(g.id)} onToggleFavorite={() => fav.toggle(g.id)} playersOnline={presence?.games?.[g.id]} priority={i < 4} />
             </div>
           ))}

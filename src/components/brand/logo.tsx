@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { cn } from '@/lib/cn';
 
 /**
@@ -5,19 +6,22 @@ import { cn } from '@/lib/cn';
  * a "new star". All brand assets live here + src/app/icon.svg + lib/branding.ts.
  */
 export function LogoMark({ size = 28, className }: { size?: number; className?: string }) {
+  // Unique gradient id per instance: a gradient defined inside a display:none
+  // SVG (e.g. the hidden desktop sidebar) would otherwise break visible copies.
+  const id = `nova-mark-${useId().replace(/:/g, '')}`;
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" className={className} aria-hidden>
       <defs>
-        <linearGradient id="nova-mark" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+        <linearGradient id={id} x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#b6a3ff" />
           <stop offset="0.55" stopColor="#7c5cff" />
           <stop offset="1" stopColor="#5232e6" />
         </linearGradient>
       </defs>
       <rect x="1" y="1" width="30" height="30" rx="9" fill="#14121f" />
-      <rect x="1.5" y="1.5" width="29" height="29" rx="8.5" fill="none" stroke="url(#nova-mark)" strokeOpacity="0.45" />
-      <ellipse cx="16" cy="16" rx="11" ry="4.6" fill="none" stroke="url(#nova-mark)" strokeWidth="1.6" transform="rotate(-28 16 16)" opacity="0.9" />
-      <path d="M16 5.5 L18.1 13.9 L26.5 16 L18.1 18.1 L16 26.5 L13.9 18.1 L5.5 16 L13.9 13.9 Z" fill="url(#nova-mark)" />
+      <rect x="1.5" y="1.5" width="29" height="29" rx="8.5" fill="none" stroke={`url(#${id})`} strokeOpacity="0.45" />
+      <ellipse cx="16" cy="16" rx="11" ry="4.6" fill="none" stroke={`url(#${id})`} strokeWidth="1.6" transform="rotate(-28 16 16)" opacity="0.9" />
+      <path d="M16 5.5 L18.1 13.9 L26.5 16 L18.1 18.1 L16 26.5 L13.9 18.1 L5.5 16 L13.9 13.9 Z" fill={`url(#${id})`} />
       <circle cx="16" cy="16" r="1.6" fill="#fff" />
     </svg>
   );

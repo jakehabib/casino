@@ -18,9 +18,9 @@ export function FeaturedGame() {
       transition={{ duration: 0.5, ease: EASE.out }}
       className="relative overflow-hidden rounded-2xl border border-line bg-surface-1"
     >
-      <CrashArt wide className="absolute inset-0 h-full w-full" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0b0920] via-[#0b0920e6] to-transparent sm:via-[#0b092099]" />
-      <div className="relative flex min-h-[260px] flex-col justify-end p-5 sm:min-h-[300px] sm:p-8">
+      <CrashArt wide className="absolute inset-x-0 top-0 h-[62%] w-full sm:inset-0 sm:h-full" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0b0920] via-[#0b0920d9] to-[#0b092033] sm:bg-gradient-to-r sm:from-[#0b0920] sm:via-[#0b092099] sm:to-transparent" />
+      <div className="relative flex min-h-[340px] flex-col justify-end p-5 sm:min-h-[300px] sm:p-8">
         <div className="flex items-center gap-2">
           <span className="rounded-md bg-accent/20 px-2 py-0.5 text-2xs font-bold uppercase tracking-[0.14em] text-[#b6a3ff]">Featured · NOVA Original</span>
           <span className="flex items-center gap-1 rounded-md bg-black/40 px-2 py-0.5 text-2xs font-semibold text-white/80">

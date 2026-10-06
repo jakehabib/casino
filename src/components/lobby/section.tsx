@@ -24,9 +24,10 @@ export function LobbySection({ title, subtitle, href, children, icon }: { title:
   );
 }
 
+/** Horizontal, snap-scrolling card rail. Cards keep a fixed, legible width. */
 export function CardRow({ children }: { children: ReactNode }) {
   return (
-    <div className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0">
+    <div className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 pt-1 sm:-mx-6 sm:px-6">
       {children}
     </div>
   );
