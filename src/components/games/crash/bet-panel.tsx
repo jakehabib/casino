@@ -150,7 +150,7 @@ export function BetPanel({ slot, signedIn, hotkeys, compact }: { slot: 0 | 1; si
   const [auto, setAuto] = useState(200);
   const [queued, setQueued] = useState(false);
   const [busy, setBusy] = useState<'bet' | 'cashout' | null>(null);
-  const pendingBetRid = useRef<string | null>(null);
+  const pendingBetRid = useRef<{ rid: string; roundId: string } | null>(null);
   const placingFor = useRef<string | null>(null);
 
   useEffect(() => {
@@ -172,15 +172,29 @@ export function BetPanel({ slot, signedIn, hotkeys, compact }: { slot: 0 | 1; si
     return () => clearTimeout(t);
   }, [round]);
 
-  const myBet: CrashMyBet | null = mine && round && mine.roundId === round.id ? mine : null;
+  const rawBet: CrashMyBet | null = mine && round && mine.roundId === round.id ? mine : null;
+  // Between the crash and settlement (a few hundred ms) the bet is still ACTIVE
+  // server-side. Show its certain outcome instead of "Waiting for launch…":
+  // an auto target below the crash point is paid at exactly that target.
+  const myBet: CrashMyBet | null =
+    rawBet && rawBet.status === 'ACTIVE' && phase === 'crashed' && round?.crashPoint !== undefined
+      ? rawBet.autoCashout !== null && rawBet.autoCashout < round.crashPoint
+        ? { ...rawBet, status: 'CASHED_OUT', cashoutAt: rawBet.autoCashout, payout: Math.floor((rawBet.amount * rawBet.autoCashout) / 100) }
+        : round.voided
+          ? { ...rawBet, status: 'REFUNDED', payout: rawBet.amount }
+          : { ...rawBet, status: 'LOST', payout: 0 }
+      : rawBet;
   const active = myBet?.status === 'ACTIVE';
   const canBetNow = phase === 'waiting' && !myBet;
 
   const place = useCallback(async () => {
     const r = useCrash.getState().round;
     if (!r) return;
-    const rid = pendingBetRid.current ?? newRequestId();
-    pendingBetRid.current = rid;
+    // Reuse the requestId only to retry a timed-out bet on the SAME round; a
+    // stale one would replay last round's bet instead of placing a new one.
+    const pending = pendingBetRid.current;
+    const rid = pending && pending.roundId === r.id ? pending.rid : newRequestId();
+    pendingBetRid.current = { rid, roundId: r.id };
     setBusy('bet');
     try {
       const res = await emitAck<{ bet: CrashMyBet }>('crash:bet', {

@@ -24,10 +24,16 @@ test.describe('Responsible play', () => {
     const before = await balanceOf(context.request);
 
     await page.goto('/casino/blackjack');
+    // Wait for the table config to load (deal enabled) before editing the bet.
+    await expect(page.getByTestId('bj-deal')).toBeEnabled();
     const betInput = page.getByLabel('Bet amount').first();
-    await betInput.fill('1000');
-    await betInput.press('Enter');
-    await expect(betInput).toHaveValue('1,000');
+    await expect(async () => {
+      await betInput.click();
+      await betInput.press('ControlOrMeta+a');
+      await betInput.pressSequentially('1000');
+      await betInput.press('Enter');
+      await expect(betInput).toHaveValue('1,000', { timeout: 2_000 });
+    }).toPass({ timeout: 15_000 });
 
     const res = page.waitForResponse((r) => r.url().includes('/api/games/blackjack/deal'));
     await page.getByTestId('bj-deal').click();

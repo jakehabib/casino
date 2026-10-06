@@ -34,8 +34,27 @@ type Ctx<B, Q, P> = {
 };
 type PublicCtx<B, Q, P> = Omit<Ctx<B, Q, P>, 'user'> & { user: SessionUser | null };
 
+/** Set by server.ts from the socket's remote address (any client-sent value is overwritten). */
+export const PEER_IP_HEADER = 'x-nova-peer-ip';
+
+/**
+ * Client IP for rate limiting / audit. The left-most X-Forwarded-For entry is
+ * client-controlled, so in production it is never trusted: we use the entry
+ * appended by our own reverse proxy (right-most) when TRUST_PROXY is set, or
+ * the TCP peer address stamped by server.ts otherwise. Development keeps the
+ * permissive behaviour so local test scripts can simulate distinct clients.
+ */
 function clientIp(req: NextRequest): string | null {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
+  const e = env();
+  const xff = req.headers.get('x-forwarded-for');
+  if (e.NODE_ENV !== 'production') {
+    return xff?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || req.headers.get(PEER_IP_HEADER) || null;
+  }
+  if (e.TRUST_PROXY && xff) {
+    const parts = xff.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
+  return req.headers.get(PEER_IP_HEADER) || null;
 }
 
 function checkCsrf(req: NextRequest) {

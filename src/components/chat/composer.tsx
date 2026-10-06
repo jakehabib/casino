@@ -10,7 +10,7 @@ import { formatDuration } from '@/lib/format';
 import { DUR, EASE } from '@/lib/motion';
 import { CHAT_MAX_LENGTH, chatLength } from '@/server/services/chat/sanitize';
 import type { ChatStatus, ChatUser } from '@/server/services/chat/types';
-import { clearChatError, sendChat, setDraft, setReplyTo, useChatStore } from './chat-store';
+import { clearChatError, rejoinChat, sendChat, setDraft, setReplyTo, useChatStore } from './chat-store';
 import { EmojiPicker } from './emoji-picker';
 
 const COUNTER_FROM = CHAT_MAX_LENGTH - 60;
@@ -28,6 +28,14 @@ function useCountdown(until: number | string | null | undefined) {
 
 function ReadOnlyNotice({ status }: { status: ChatStatus }) {
   const remaining = useCountdown(status.until);
+  // A timed restriction (mute, break) that just ran out: re-fetch the status so
+  // the composer comes back without a refresh. Small delay absorbs clock skew.
+  const expired = !!status.until && remaining === 0;
+  useEffect(() => {
+    if (!expired) return;
+    const t = setTimeout(rejoinChat, 1_500);
+    return () => clearTimeout(t);
+  }, [expired, status.until]);
   const base = 'flex min-h-[52px] items-center gap-3 rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-[13px]';
   if (status.reason === 'GUEST') {
     return (

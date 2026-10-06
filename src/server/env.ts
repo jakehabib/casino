@@ -12,6 +12,11 @@ const EnvSchema = z.object({
     .optional()
     .transform((v) => v === 'true' || v === '1'),
   LOG_LEVEL: z.string().default('info'),
+  /** Set when behind exactly one trusted reverse proxy that appends X-Forwarded-For. */
+  TRUST_PROXY: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

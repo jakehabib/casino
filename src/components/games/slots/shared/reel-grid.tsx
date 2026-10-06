@@ -246,6 +246,8 @@ const Cell = memo(function Cell({
   return (
     <motion.div
       className="absolute inset-x-0 top-0"
+      data-cell={posKey(reel, row)}
+      data-symbol={cell.symbol}
       style={{ height: `${100 / rows}%`, padding: `${pad * 100}%`, zIndex: state === 'win' ? 1 : 0 }}
       initial={reduced ? { y: `${row * 100}%`, opacity: 0 } : { y: `${(row - drop) * 100}%`, opacity: 1 }}
       animate={{ y: `${row * 100}%`, opacity: 1 }}

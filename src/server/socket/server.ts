@@ -22,6 +22,24 @@ export async function createSocketServer(http: HttpServer, opts: { origin: strin
   setIO(io);
 
   // Cookie-based session auth. Guests may connect (read-only lobby, chat, crash spectating).
+  // Cross-site WebSocket hijacking guard: CORS does not apply to the websocket
+  // transport, so reject browser handshakes from any other origin explicitly.
+  const allowedOrigin = new URL(opts.origin).host;
+  io.use((socket, next) => {
+    const origin = socket.handshake.headers.origin;
+    if (!origin) return next(); // non-browser clients (no ambient cookies to abuse)
+    let host: string | null = null;
+    try {
+      host = new URL(origin).host;
+    } catch {
+      host = null;
+    }
+    const reqHost = socket.handshake.headers['x-forwarded-host'] ?? socket.handshake.headers.host;
+    if (host && (host === allowedOrigin || host === reqHost)) return next();
+    logger.warn({ origin }, 'socket handshake from foreign origin rejected');
+    next(new Error('forbidden_origin'));
+  });
+
   io.use(async (socket, next) => {
     try {
       const raw = socket.handshake.headers.cookie;

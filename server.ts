@@ -16,6 +16,8 @@ const handle = app.getRequestHandler();
 async function main() {
   await app.prepare();
   const http = createServer((req, res) => {
+    // Authoritative peer address for rate limiting (see clientIp in src/server/api/handler.ts).
+    req.headers['x-nova-peer-ip'] = req.socket.remoteAddress ?? '';
     void handle(req, res);
   });
   await createSocketServer(http, { origin: process.env.APP_URL ?? `http://localhost:${port}` });

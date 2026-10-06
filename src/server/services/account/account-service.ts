@@ -139,18 +139,35 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function resetPassword(token: string, password: string) {
+  const invalid = () => new AppError('VALIDATION', 'This reset link is invalid or has expired.');
   const row = await prisma.passwordResetToken.findUnique({ where: { tokenHash: hash(token) } });
-  if (!row || row.usedAt || row.expiresAt < new Date()) throw new AppError('VALIDATION', 'This reset link is invalid or has expired.');
+  if (!row || row.usedAt || row.expiresAt < new Date()) throw invalid();
   const passwordHash = await hashPassword(password);
-  await prisma.$transaction([
-    prisma.passwordResetToken.update({ where: { id: row.id }, data: { usedAt: new Date() } }),
-    prisma.user.update({ where: { id: row.userId }, data: { passwordHash } }),
-    prisma.session.deleteMany({ where: { userId: row.userId } }),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    // Single use: claim the token conditionally so concurrent submissions of
+    // the same link cannot both succeed.
+    const claimed = await tx.passwordResetToken.updateMany({
+      where: { id: row.id, usedAt: null, expiresAt: { gt: new Date() } },
+      data: { usedAt: new Date() },
+    });
+    if (claimed.count !== 1) throw invalid();
+    await tx.user.update({ where: { id: row.userId }, data: { passwordHash } });
+    await tx.session.deleteMany({ where: { userId: row.userId } });
+  });
 }
 
-export async function changePassword(userId: string, current: string, next: string) {
+/**
+ * Change password and sign out every OTHER session (the caller's current
+ * session, identified by its token hash, stays signed in).
+ */
+export async function changePassword(userId: string, current: string, next: string, keepSessionTokenHash?: string | null) {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   if (!(await verifyPassword(user.passwordHash, current))) throw new AppError('VALIDATION', 'Current password is incorrect', { field: 'currentPassword' });
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(next) } });
+  const passwordHash = await hashPassword(next);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+    prisma.session.deleteMany({
+      where: { userId, ...(keepSessionTokenHash ? { tokenHash: { not: keepSessionTokenHash } } : {}) },
+    }),
+  ]);
 }
