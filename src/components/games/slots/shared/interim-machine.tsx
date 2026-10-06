@@ -13,7 +13,7 @@ import { gameById } from '@/lib/games';
 export default function InterimMachine({ slotId }: { slotId: string }) {
   const m = useSlotMachine(slotId);
   const symbols = m.def?.symbols;
-  const theme = useMemo(() => createGenericTheme(slotId, symbols ?? []), [slotId, symbols]);
   const meta = gameById(slotId);
+  const theme = useMemo(() => createGenericTheme(slotId, symbols ?? [], meta?.name), [slotId, symbols, meta?.name]);
   return <SlotMachineView m={m} slotId={slotId} theme={theme} title={meta?.name ?? slotId} subtitle={meta?.tagline} />;
 }

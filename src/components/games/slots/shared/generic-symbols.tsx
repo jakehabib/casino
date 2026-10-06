@@ -29,7 +29,13 @@ export function GenericSymbol({ sym, index, opts }: { sym: PublicSymbol | undefi
   if (!sym) return <svg viewBox="0 0 100 100" className="h-full w-full" />;
   const c = genericSymbolColor(index, sym.kind);
   const label =
-    sym.kind === 'wild' ? (sym.multiplier ? `W×${sym.multiplier}` : 'WILD') : sym.kind === 'scatter' ? 'BONUS' : sym.name.replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase();
+    sym.kind === 'wild'
+      ? sym.multiplier
+        ? `WILD ×${sym.multiplier}`
+        : 'WILD'
+      : sym.kind === 'scatter'
+        ? 'BONUS'
+        : sym.id.replace(/^GEM_/, '').replace(/_/g, ' ').slice(0, 9);
   const shape = sym.kind === 'scatter' ? SHAPES[4] : sym.kind === 'wild' ? SHAPES[5] : SHAPES[index % 4];
   const strong = sym.tier === 'premium' || sym.kind !== 'regular';
   return (
@@ -37,7 +43,7 @@ export function GenericSymbol({ sym, index, opts }: { sym: PublicSymbol | undefi
       <rect x="4" y="4" width="92" height="92" rx="18" fill="#ffffff08" stroke={c} strokeOpacity={opts?.state === 'win' ? 0.9 : 0.25} strokeWidth="2" />
       <path d={shape} transform="translate(50 42) scale(0.55) translate(-50 -50)" fill={c} fillOpacity={strong ? 1 : 0.85} />
       {opts?.blurred ? null : (
-        <text x="50" y="84" textAnchor="middle" fontSize={label.length > 4 ? 12 : 14} fontWeight="800" letterSpacing="1" fill="#eceef2" fillOpacity="0.85" fontFamily="var(--font-geist-sans)">
+        <text x="50" y="84" textAnchor="middle" fontSize={label.length > 7 ? 10 : label.length > 5 ? 12 : 14} fontWeight="800" letterSpacing="1" fill="#eceef2" fillOpacity="0.85" fontFamily="var(--font-geist-sans)">
           {label}
         </text>
       )}
@@ -46,7 +52,7 @@ export function GenericSymbol({ sym, index, opts }: { sym: PublicSymbol | undefi
 }
 
 /** Build a neutral theme for any machine from its public symbol list. */
-export function createGenericTheme(id: string, symbols: PublicSymbol[]): SlotTheme {
+export function createGenericTheme(id: string, symbols: PublicSymbol[], name?: string): SlotTheme {
   const idx = new Map(symbols.map((s, i) => [s.id, i]));
   return {
     id,
@@ -56,5 +62,6 @@ export function createGenericTheme(id: string, symbols: PublicSymbol[]): SlotThe
     reelBackground: 'linear-gradient(180deg, #0e1014 0%, #121419 50%, #0e1014 100%)',
     reelDivider: '#ffffff0d',
     cellPadding: 0.07,
+    logo: name ? <div className="text-[15px] font-semibold uppercase tracking-[0.32em] text-fg-muted">{name}</div> : undefined,
   };
 }

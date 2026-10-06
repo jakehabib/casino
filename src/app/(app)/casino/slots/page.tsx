@@ -21,8 +21,6 @@ const VOL: Record<Volatility, { label: string; level: number }> = {
   high: { label: 'High', level: 4 },
 };
 
-const MODE_LABEL = { lines: 'Paylines', ways: 'Ways', cluster: 'Cluster pays' } as const;
-
 /** /casino/slots — the three machines, side by side. */
 export default function SlotsLobbyPage() {
   const user = useUser();
@@ -96,26 +94,28 @@ export default function SlotsLobbyPage() {
                       <div className="mt-0.5 text-[13px] text-fg-subtle">{g.tagline}</div>
                     </div>
                   </div>
-                  <p className="mt-2 text-[13px] leading-relaxed text-fg-muted">{g.description}</p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-fg-muted md:min-h-[63px]">{g.description}</p>
 
-                  <dl className="mt-4 grid grid-cols-3 gap-2">
-                    <Stat label="RTP" value={`${def.rtpSimulated.rtp.toFixed(2)}%`} />
-                    <div className="rounded-lg border border-line bg-surface-2/60 px-2.5 py-2">
-                      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">Volatility</dt>
-                      <dd className="mt-1.5 flex items-center gap-1" aria-label={vol.label}>
-                        {[1, 2, 3, 4].map((n) => (
-                          <span key={n} className={cn('h-1.5 flex-1 rounded-full', n <= vol.level ? 'bg-fg' : 'bg-surface-4')} />
-                        ))}
-                      </dd>
-                      <dd className="mt-1 text-[11px] font-medium text-fg-muted">{vol.label}</dd>
-                    </div>
-                    <Stat label="Max win" value={`${def.maxWinX.toLocaleString('en-US')}×`} />
+                  <dl className="mt-4 divide-y divide-line-soft rounded-lg border border-line bg-surface-2/50 text-[13px]">
+                    <Row label="RTP">
+                      <span className="tabular font-semibold text-fg">{def.rtpSimulated.rtp.toFixed(2)}%</span>
+                    </Row>
+                    <Row label="Volatility">
+                      <span className="flex items-center gap-2">
+                        <span className="flex gap-0.5" aria-hidden>
+                          {[1, 2, 3, 4].map((n) => (
+                            <span key={n} className={cn('h-2.5 w-1.5 rounded-sm', n <= vol.level ? 'bg-fg' : 'bg-surface-4')} />
+                          ))}
+                        </span>
+                        <span className="font-semibold text-fg">{vol.label}</span>
+                      </span>
+                    </Row>
+                    <Row label="Max win">
+                      <span className="tabular font-semibold text-fg">{def.maxWinX.toLocaleString('en-US')}× bet</span>
+                    </Row>
                   </dl>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className="rounded-md bg-surface-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">
-                      {def.reels}×{def.rows} · {MODE_LABEL[def.mode]}
-                    </span>
                     {facts.map((f) => (
                       <span key={f} className="rounded-md bg-surface-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">
                         {f}
@@ -155,11 +155,11 @@ export default function SlotsLobbyPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-line bg-surface-2/60 px-2.5 py-2">
-      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">{label}</dt>
-      <dd className="tabular mt-1 text-[15px] font-semibold text-fg">{value}</dd>
+    <div className="flex items-center justify-between gap-3 px-3 py-2">
+      <dt className="text-fg-subtle">{label}</dt>
+      <dd>{children}</dd>
     </div>
   );
 }

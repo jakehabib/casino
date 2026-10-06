@@ -19,7 +19,7 @@ export const ROUND_DETAIL_REGISTRY: Record<GameKey, DetailComponent> = {
   BACCARAT: dynamic(() => import('@/components/games/baccarat/round-detail').then((m) => m.BaccaratRoundDetail as DetailComponent), { loading }),
   ROULETTE: dynamic(() => import('@/components/games/roulette/round-detail').then((m) => m.RouletteRoundDetail as DetailComponent), { loading }),
   CRASH: dynamic(() => import('@/components/games/crash/round-detail').then((m) => m.CrashRoundDetail as DetailComponent), { loading }),
-  SLOTS: (() => null) as DetailComponent, // TEMP until slots/round-detail lands
+  SLOTS: dynamic(() => import('@/components/games/slots/round-detail').then((m) => m.SlotRoundDetail as DetailComponent), { loading }),
 };
 
 /** API path of a round's detail payload. Crash uses the CrashBet id; slots the SlotSpin id. */

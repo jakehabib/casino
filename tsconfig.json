@@ -40,7 +40,9 @@
     ".next-crash/types/**/*.ts",
     ".next-crash/dev/types/**/*.ts",
     ".next-social/types/**/*.ts",
-    ".next-social/dev/types/**/*.ts"
+    ".next-social/dev/types/**/*.ts",
+    ".next-slots/types/**/*.ts",
+    ".next-slots/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

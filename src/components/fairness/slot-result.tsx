@@ -8,7 +8,7 @@ import type { SlotDefinition, SpinOutcome } from '@/engines/slots/types';
 
 function symbolLabel(def: SlotDefinition, id: string) {
   const s = def.symbols.find((x) => x.id === id);
-  return { short: (s?.name ?? id).replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || id.slice(0, 3), name: s?.name ?? id, kind: s?.kind ?? 'regular', tier: s?.tier };
+  return { short: (s?.name ?? id).replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase() || id.slice(0, 4), name: s?.name ?? id, kind: s?.kind ?? 'regular', tier: s?.tier };
 }
 
 function GridView({ def, grid, highlight }: { def: SlotDefinition; grid: string[][]; highlight: Set<string> }) {
