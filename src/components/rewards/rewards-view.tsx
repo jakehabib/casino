@@ -48,7 +48,7 @@ function RewardCard({
   amount: number;
   status: React.ReactNode;
   children?: React.ReactNode;
-  action: React.ReactNode;
+  action?: React.ReactNode;
   tone?: 'default' | 'ready' | 'muted';
   testId?: string;
 }) {
@@ -74,8 +74,8 @@ function RewardCard({
         <span className="tabular text-[28px] font-semibold leading-none tracking-tight">{formatCredits(amount)}</span>
       </div>
       <div className="mt-2 min-h-[20px] text-[13px] text-fg-muted">{status}</div>
-      {children ? <div className="mt-3">{children}</div> : null}
-      <div className="mt-auto pt-4">{action}</div>
+      {children ? <div className="mt-3 flex flex-1 flex-col justify-end">{children}</div> : null}
+      {action ? <div className="mt-auto pt-4">{action}</div> : null}
     </article>
   );
 }

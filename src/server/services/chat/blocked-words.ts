@@ -137,7 +137,10 @@ function termPattern(key: string): RegExp {
     while (j < chars.length && chars[j] === chars[i]) j++;
     const n = j - i;
     const c = chars[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    src += n === 1 ? `${c}+` : `${c}{${n},}`;
+    // The final run is lazy; the matcher then extends it within the same word
+    // only, so "sh1t then" never swallows the "t" of the next word.
+    const last = j >= chars.length;
+    src += n === 1 ? `${c}+${last ? '?' : ''}` : `${c}{${n},}${last ? '?' : ''}`;
     i = j;
   }
   return new RegExp(src, 'gu');
@@ -182,7 +185,8 @@ export function moderateText(text: string, terms: BlockedTerm[] = BLOCKED_TERMS)
     while ((m = re.exec(letters))) {
       re.lastIndex = m.index + 1;
       const a = owner[m.index];
-      const b = owner[m.index + m[0].length - 1];
+      let b = owner[m.index + m[0].length - 1];
+      while (b + 1 < stream.length && stream[b + 1].c === stream[b].c && !stream[b + 1].wordStart) b++;
       const first = stream[a];
       const last = stream[b];
       if (!first.wordStart) continue;

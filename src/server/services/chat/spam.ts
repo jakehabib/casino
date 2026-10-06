@@ -2,7 +2,6 @@
  * Spam heuristics. PURE (no server imports). The chat service applies the
  * policy (windows, limits) using these classifiers.
  */
-import { foldChar } from './blocked-words';
 
 /** Window in which an identical (normalised) message from the same user is refused. */
 export const DUPLICATE_WINDOW_MS = 60_000;
@@ -23,8 +22,8 @@ export function spamFingerprint(text: string): string {
   let out = '';
   let prev = '';
   for (const ch of text) {
-    const f = foldChar(ch);
-    if (!f || f === prev) continue;
+    const f = ch.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
+    if (!f || !/^[\p{L}\p{N}]+$/u.test(f) || f === prev) continue;
     out += f;
     prev = f;
   }
