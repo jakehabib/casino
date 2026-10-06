@@ -39,6 +39,8 @@ export function BaccaratControls({ c }: { c: BaccaratController }) {
   const showBets = settled ? Object.fromEntries(settled.bets.map((b) => [b.type, b.amount])) as Record<ZoneKey, number | undefined> : bets;
   const totalShown = settled ? settled.totalWagered : staked;
   const chipSize = useChipSize();
+  // Outcomes are exclusive: best case is the max over Player win / Banker win / Tie.
+  const maxReturn = Math.max(c.potential.PLAYER, c.potential.BANKER, c.potential.TIE + bets.PLAYER + bets.BANKER);
 
   return (
     <ControlsPanel className="gap-3.5 sm:gap-4">
@@ -51,7 +53,7 @@ export function BaccaratControls({ c }: { c: BaccaratController }) {
             </span>
           ) : null}
         </div>
-        <ChipSelector value={c.chip} onChange={c.setChip} size={chipSize} className="-mx-1 justify-between px-1" disabledAbove={c.balance ?? undefined} />
+        <ChipSelector value={c.chip} onChange={c.setChip} size={chipSize} className="-mx-1 justify-between px-1 sm:justify-start sm:gap-3 lg:justify-between lg:gap-1.5" disabledAbove={c.balance ?? undefined} />
       </div>
 
       <div className="grid grid-cols-4 gap-1.5">
@@ -107,14 +109,18 @@ export function BaccaratControls({ c }: { c: BaccaratController }) {
             {formatCredits(totalShown)}
           </span>
         </div>
-        {settled ? (
-          <div className="flex items-center justify-between border-t border-line-soft px-3 py-2.5 text-[13px]">
-            <span className="font-medium text-fg-muted">Result</span>
+        <div className="flex items-center justify-between border-t border-line-soft px-3 py-2.5 text-[13px]">
+          <span className="font-medium text-fg-muted">{settled ? 'Result' : 'Max return'}</span>
+          {settled ? (
             <span className={cn('tabular font-bold', settled.net > 0 ? 'text-win' : settled.net === 0 ? 'text-fg-muted' : 'text-fg-subtle')}>
-              {settled.net > 0 ? `+${formatCredits(settled.net)}` : settled.net === 0 ? 'Push' : formatCredits(settled.net)}
+              {settled.net > 0 ? `+${formatCredits(settled.net)}` : settled.net === 0 ? (settled.bets.every((b) => b.outcome === 'PUSH') ? 'Push' : '±0') : formatCredits(settled.net)}
             </span>
-          </div>
-        ) : null}
+          ) : (
+            <Tooltip content="Largest possible total return for these bets">
+              <span className="tabular font-semibold text-fg-muted">{staked ? formatCredits(maxReturn) : '—'}</span>
+            </Tooltip>
+          )}
+        </div>
       </div>
     </ControlsPanel>
   );

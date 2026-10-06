@@ -52,6 +52,20 @@ export const RouletteBoard = memo(function RouletteBoard({ orientation, bets, se
   const downRef = useRef<{ x: number; y: number; id: number } | null>(null);
   const covered = useMemo(() => new Set(hover?.numbers ?? []), [hover]);
   const horizontal = orientation === 'horizontal';
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [boardW, setBoardW] = useState(0);
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setBoardW(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // Row heights follow the cell width so cells stay well proportioned at every size.
+  const unit = boardW / (horizontal ? 14 : 3.6);
+  const row = horizontal ? Math.round(Math.max(40, Math.min(54, unit * 0.95))) : 36;
+  const out = horizontal ? Math.round(Math.max(38, Math.min(44, row * 0.82))) : 40;
+  const chipPx = Math.round(Math.max(22, Math.min(30, (horizontal ? Math.min(unit, row) : row) * 0.72)));
 
   const setHot = useCallback(
     (s: BetSpot | null) => {
@@ -119,7 +133,7 @@ export const RouletteBoard = memo(function RouletteBoard({ orientation, bets, se
       >
         <span className={cn('pointer-events-none select-none', extra?.vertical && '[writing-mode:vertical-rl] rotate-180')}>{extra?.children ?? OUTSIDE_TEXT[id]}</span>
         <AnimatePresence>
-          {chip ? <BoardChip key={id} amount={chip.amount} payout={chip.payout} payoutTarget={payoutTarget} /> : null}
+          {chip ? <BoardChip key={id} amount={chip.amount} payout={chip.payout} payoutTarget={payoutTarget} side={horizontal && spot.type !== 'COLUMN'} /> : null}
         </AnimatePresence>
       </button>
     );
@@ -136,18 +150,16 @@ export const RouletteBoard = memo(function RouletteBoard({ orientation, bets, se
 
   return (
     <div
-      className={cn(
-        'roulette-board relative grid select-none overflow-visible rounded-lg [--rb-out:44px] [--rb-side:40px]',
-        horizontal ? '[--rb-row:clamp(40px,4.6vw,58px)]' : '[--rb-row:36px]',
-      )}
-      style={gridStyle}
+      ref={rootRef}
+      className="roulette-board relative grid select-none overflow-visible rounded-lg"
+      style={{ ...gridStyle, ['--rb-row' as string]: `${row}px`, ['--rb-out' as string]: `${out}px`, ['--rb-side' as string]: `${out}px`, ['--chip' as string]: `${chipPx}px` }}
       onPointerLeave={() => setHot(null)}
     >
       {/* Inside area: zero + 36 numbers, with a single hit-test overlay */}
       <div ref={insideRef} className="relative" style={horizontal ? { gridColumn: '1 / span 13', gridRow: '1 / span 3' } : { gridColumn: '3 / span 3', gridRow: '1 / span 13' }}>
         <NumberCells orientation={orientation} covered={covered} win={win} disabled={disabled} onPlace={onPlace} />
         <div
-          className={cn('absolute inset-0 z-[2] touch-manipulation', disabled ? 'cursor-default' : 'cursor-pointer')}
+          className={cn('absolute z-[2] touch-manipulation', horizontal ? 'inset-x-0 top-0 -bottom-2.5' : 'inset-y-0 right-0 -left-2.5', disabled ? 'cursor-default' : 'cursor-pointer')}
           onPointerMove={(e) => {
             if (disabled || e.pointerType === 'touch') return;
             setHot(hit(e.clientX, e.clientY));
@@ -289,13 +301,13 @@ const NumberCells = memo(function NumberCells({
  * Chip on the layout. In the result view a winning chip shows its payout and a
  * payout chip glides to the win readout; losing chips fade out.
  */
-function BoardChip({ amount, payout, centered, payoutTarget }: { amount: number; payout: number; centered?: boolean; payoutTarget?: RefObject<HTMLElement | null> }) {
+function BoardChip({ amount, payout, centered, side, payoutTarget }: { amount: number; payout: number; centered?: boolean; side?: boolean; payoutTarget?: RefObject<HTMLElement | null> }) {
   const reduce = useReducedMotion();
   const settledLoss = payout === 0;
   const settledWin = payout > 0;
   return (
     <motion.div
-      className={cn('pointer-events-none absolute z-[3] [--chip:clamp(22px,2.3vw,30px)]', centered ? '-translate-x-1/2 -translate-y-1/2' : 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2')}
+      className={cn('pointer-events-none absolute z-[3] -translate-x-1/2 -translate-y-1/2', !centered && 'top-1/2', !centered && (side ? 'left-[calc(100%-22px)]' : 'left-1/2'))}
       initial={{ opacity: 0, scale: 0.6, y: -10 }}
       animate={settledLoss ? { opacity: 0, scale: 0.85, y: 0, transition: { delay: 0.35, duration: 0.5 } } : { opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.18 } }}

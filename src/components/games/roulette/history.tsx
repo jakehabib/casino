@@ -117,11 +117,11 @@ function Split({ a, b }: { a: [string, number]; b: [string, number] }) {
   const pa = t ? Math.round((a[1] / t) * 100) : 50;
   return (
     <div className="tabular flex items-center gap-2 text-[11px] text-fg-muted">
-      <span className="w-[52px]">{a[0]} <b className="font-semibold text-fg">{t ? pa : 0}%</b></span>
+      <span className="w-[78px] whitespace-nowrap">{a[0]} <b className="font-semibold text-fg">{t ? pa : 0}%</b></span>
       <div className="flex h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
         <div className="bg-fg-muted/70 transition-[width] duration-500" style={{ width: `${pa}%` }} />
       </div>
-      <span className="w-[60px] text-right">
+      <span className="w-[78px] whitespace-nowrap text-right">
         <b className="font-semibold text-fg">{t ? 100 - pa : 0}%</b> {b[0]}
       </span>
     </div>

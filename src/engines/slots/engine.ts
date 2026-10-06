@@ -323,48 +323,62 @@ export function evaluateClusters(c: Compiled, grid: Grid, bet: number, mult: num
   const { reels, rows } = c.def;
   const min = c.def.clusterMin ?? 5;
   const n = reels * rows;
+  // Flat cell view: cell i = reel * rows + row. code: 1 = this symbol, 2 = wild, 0 = other.
+  const flat: string[] = new Array(n);
+  const wild = new Uint8Array(n);
+  let present = '';
+  for (let r = 0; r < reels; r++)
+    for (let y = 0; y < rows; y++) {
+      const x = grid[r][y];
+      flat[r * rows + y] = x;
+      if (c.isWild[x]) wild[r * rows + y] = 1;
+      else present += x + '|';
+    }
   const seen = new Uint8Array(n);
   const stack = new Int32Array(n);
+  const members = new Int32Array(n);
   for (const s of c.regular) {
     const payRow = c.pay[s];
-    if (!payRow) continue;
+    if (!payRow || !present.includes(s + '|')) continue;
     seen.fill(0);
     for (let start = 0; start < n; start++) {
-      const sr = (start / rows) | 0;
-      const sy = start % rows;
-      if (seen[start] || grid[sr][sy] !== s) continue;
-      // flood fill over s ∪ wild
+      if (seen[start] || flat[start] !== s) continue;
+      // Flood fill over s ∪ wild. Wilds are re-visited per symbol, so they can
+      // be shared between clusters of different symbols.
       let sp = 0;
+      let size = 0;
       stack[sp++] = start;
       seen[start] = 1;
-      const members: number[] = [];
       while (sp > 0) {
         const i = stack[--sp];
-        members.push(i);
-        const r = (i / rows) | 0;
+        members[size++] = i;
         const y = i % rows;
-        // neighbours: up, down, left, right
-        if (y > 0) visit(i - 1, r, y - 1);
-        if (y < rows - 1) visit(i + 1, r, y + 1);
-        if (r > 0) visit(i - rows, r - 1, y);
-        if (r < reels - 1) visit(i + rows, r + 1, y);
-      }
-      function visit(j: number, r: number, y: number) {
-        if (seen[j]) return;
-        const x = grid[r][y];
-        if (x === s || c.isWild[x]) {
+        let j = i - 1; // up
+        if (y > 0 && !seen[j] && (flat[j] === s || wild[j])) {
+          seen[j] = 1;
+          stack[sp++] = j;
+        }
+        j = i + 1; // down
+        if (y < rows - 1 && !seen[j] && (flat[j] === s || wild[j])) {
+          seen[j] = 1;
+          stack[sp++] = j;
+        }
+        j = i - rows; // left
+        if (j >= 0 && !seen[j] && (flat[j] === s || wild[j])) {
+          seen[j] = 1;
+          stack[sp++] = j;
+        }
+        j = i + rows; // right
+        if (j < n && !seen[j] && (flat[j] === s || wild[j])) {
           seen[j] = 1;
           stack[sp++] = j;
         }
       }
-      // wild cells must be re-usable by other clusters of the same symbol? They are
-      // connected, so they are part of this component — fine. Reset nothing.
-      const size = members.length;
       if (size < min) continue;
       const pay = payRow[Math.min(size, payRow.length - 1)] ?? 0;
       if (pay <= 0) continue;
-      members.sort((a, b) => a - b);
-      const positions: Pos[] = members.map((i) => [(i / rows) | 0, i % rows]);
+      const sorted = Array.from(members.subarray(0, size)).sort((a, b) => a - b);
+      const positions: Pos[] = sorted.map((i) => [(i / rows) | 0, i % rows]);
       out.push({ kind: 'cluster', symbol: s, positions, count: size, pay, multiplier: mult, amount: winAmount(bet, pay, 1, mult) });
     }
   }

@@ -23,7 +23,8 @@ export const useBalance = create<BalanceState>((set, get) => ({
   balance: null,
   held: null,
   lastDelta: null,
-  set: (balance, delta) => set({ balance, lastDelta: delta ? { amount: delta, at: Date.now() } : get().lastDelta }),
+  // While a game holds the display, the delta is deferred to release() so wins never show before the reveal.
+  set: (balance, delta) => set({ balance, lastDelta: delta && get().held === null ? { amount: delta, at: Date.now() } : get().lastDelta }),
   hold: (value) => set({ held: value }),
   release: () => {
     const { held, balance } = get();

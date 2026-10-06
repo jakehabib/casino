@@ -104,9 +104,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const allowed = !current || RANK[role] >= RANK[current.min];
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-4 sm:px-6 lg:pt-6">
+    <div className="@container/shell mx-auto max-w-[1400px] px-4 pb-10 pt-4 sm:px-6 lg:pt-6">
       {/* Mobile / tablet: horizontal section switcher */}
-      <div className="sticky top-14 z-[var(--z-sticky)] -mx-4 mb-4 border-b border-line-soft bg-bg/90 px-4 backdrop-blur-xl sm:top-16 sm:-mx-6 sm:px-6 lg:hidden">
+      <div className="sticky top-14 z-[var(--z-sticky)] -mx-4 mb-4 border-b border-line-soft bg-bg/90 px-4 backdrop-blur-xl sm:top-16 sm:-mx-6 sm:px-6 @4xl/shell:hidden">
         <div className="flex items-center gap-2 pt-2.5 text-2xs font-semibold uppercase tracking-[0.14em] text-fg-subtle">
           <Shield size={12} className="text-accent" /> Admin console
         </div>
@@ -132,8 +132,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </nav>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[208px_minmax(0,1fr)]">
-        <aside className="hidden lg:block">
+      <div className="grid gap-6 @4xl/shell:grid-cols-[200px_minmax(0,1fr)]">
+        <aside className="hidden @4xl/shell:block">
           <div className="sticky top-[88px]">
             <div className="mb-3 flex items-center justify-between px-2.5">
               <div className="flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.14em] text-fg-subtle">
@@ -170,7 +170,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </aside>
-        <div className="min-w-0">
+        <div className="@container min-w-0">
           {allowed ? (
             children
           ) : (

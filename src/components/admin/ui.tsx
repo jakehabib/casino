@@ -17,7 +17,7 @@ import { toast } from '@/components/ui/toast';
 
 export function PageHeader({ title, description, actions, eyebrow }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-5 flex flex-col gap-3 @xl:flex-row @xl:items-end @xl:justify-between">
       <div className="min-w-0">
         {eyebrow ? <div className="mb-1 text-2xs font-semibold uppercase tracking-[0.14em] text-fg-subtle">{eyebrow}</div> : null}
         <h1 className="truncate text-xl font-semibold tracking-tight sm:text-[22px]">{title}</h1>
@@ -49,8 +49,8 @@ export function Panel({
   return (
     <section className={cn('overflow-hidden rounded-xl border border-line bg-surface-1', className)}>
       {title || actions ? (
-        <header className="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
-          <div className="min-w-0">
+        <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line-soft px-4 py-3">
+          <div className="min-w-[10rem] flex-1">
             {title ? <h2 className="truncate text-[13.5px] font-semibold tracking-tight text-fg">{title}</h2> : null}
             {description ? <p className="mt-0.5 truncate text-xs text-fg-subtle">{description}</p> : null}
           </div>
@@ -242,7 +242,7 @@ export const actionLabel = (a: string) => ACTION_LABEL[a] ?? a.replace(/_/g, ' '
 
 export function KeyValue({ items, className }: { items: { label: ReactNode; value: ReactNode }[]; className?: string }) {
   return (
-    <dl className={cn('grid gap-x-6 gap-y-3 sm:grid-cols-2', className)}>
+    <dl className={cn('grid gap-x-6 gap-y-3 @xs:grid-cols-2', className)}>
       {items.map((it, i) => (
         <div key={i} className="min-w-0">
           <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-subtle">{it.label}</dt>

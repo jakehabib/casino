@@ -47,7 +47,7 @@ export function AdminDashboard() {
         <DashboardSkeleton />
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @5xl:grid-cols-6">
             <StatCard
               label="Active now"
               icon={<Activity size={14} className="text-win" />}
@@ -76,12 +76,12 @@ export function AdminDashboard() {
             />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="grid gap-4 @4xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <ActivityPanel series={d.series} />
             <PopularityPanel perGame={d.perGame} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="grid gap-4 @4xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <VolumePanel rows={d.perGame.all} />
             <EconomyPanel credits={d.credits} />
           </div>
@@ -94,12 +94,12 @@ export function AdminDashboard() {
 function DashboardSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-3 @5xl:grid-cols-6">
         {Array.from({ length: 6 }, (_, i) => (
           <Skeleton key={i} className="h-[92px] rounded-xl" />
         ))}
       </div>
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid gap-4 @4xl:grid-cols-[1.6fr_1fr]">
         <Skeleton className="h-[300px] rounded-xl" />
         <Skeleton className="h-[300px] rounded-xl" />
       </div>

@@ -46,6 +46,7 @@ export function useBaccarat() {
     queryFn: () => api.get<BaccaratStateDto>('/api/games/baccarat/state'),
     staleTime: 10_000,
     refetchOnWindowFocus: false,
+    refetchOnMount: 'always',
   });
   const cfg = state.data?.config;
 
@@ -85,6 +86,7 @@ export function useBaccarat() {
       const lb = { ...EMPTY_BETS };
       for (const b of last.bets) lb[b.type] = b.amount;
       setLastBets(lb);
+      setBets(lb);
     }
   }, [state.data]);
 

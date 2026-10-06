@@ -24,10 +24,10 @@ const BASE = reel({
   ASTROLABE: 90,
   STARCROWN: 60,
   WILD: 20,
-  SCATTER: 18,
+  SCATTER: 27,
   SUPERNOVA: 3,
 });
-const FREE = { ...BASE, SCATTER: 14, SUPERNOVA: 4, RELIC: 15 };
+const FREE = { ...BASE, SCATTER: 22, SUPERNOVA: 6, RELIC: 50 };
 
 export const starforgedRelics: SlotDefinition = {
   id: 'starforged-relics',
@@ -55,13 +55,13 @@ export const starforgedRelics: SlotDefinition = {
   },
   // hundredths of TOTAL bet per cluster; sizes between keys use the lower key
   paytable: {
-    GEM_TEAL: { 5: 10, 6: 15, 7: 20, 8: 30, 9: 40, 10: 60, 12: 100, 15: 200, 20: 500 },
-    GEM_ROSE: { 5: 10, 6: 15, 7: 20, 8: 30, 9: 40, 10: 60, 12: 100, 15: 200, 20: 500 },
-    GEM_AZURE: { 5: 15, 6: 20, 7: 25, 8: 40, 9: 50, 10: 75, 12: 125, 15: 250, 20: 600 },
-    GEM_AMBER: { 5: 15, 6: 20, 7: 25, 8: 40, 9: 50, 10: 75, 12: 125, 15: 250, 20: 600 },
-    CHALICE: { 5: 25, 6: 35, 7: 50, 8: 75, 9: 100, 10: 150, 12: 250, 15: 500, 20: 1000 },
-    ASTROLABE: { 5: 40, 6: 50, 7: 75, 8: 100, 9: 150, 10: 200, 12: 400, 15: 750, 20: 2000 },
-    STARCROWN: { 5: 50, 6: 75, 7: 100, 8: 150, 9: 200, 10: 300, 12: 600, 15: 1500, 20: 5000 },
+    GEM_TEAL: { 5: 10, 6: 15, 7: 20, 8: 30, 9: 45, 10: 75, 12: 150, 15: 400, 20: 1000 },
+    GEM_ROSE: { 5: 10, 6: 15, 7: 20, 8: 30, 9: 45, 10: 75, 12: 150, 15: 400, 20: 1000 },
+    GEM_AZURE: { 5: 15, 6: 20, 7: 30, 8: 45, 9: 60, 10: 100, 12: 200, 15: 500, 20: 1250 },
+    GEM_AMBER: { 5: 15, 6: 20, 7: 30, 8: 45, 9: 60, 10: 100, 12: 200, 15: 500, 20: 1250 },
+    CHALICE: { 5: 25, 6: 35, 7: 50, 8: 80, 9: 120, 10: 200, 12: 400, 15: 1000, 20: 2500 },
+    ASTROLABE: { 5: 40, 6: 50, 7: 75, 8: 120, 9: 180, 10: 300, 12: 600, 15: 1500, 20: 4000 },
+    STARCROWN: { 5: 50, 6: 75, 7: 100, 8: 150, 9: 250, 10: 400, 12: 1000, 15: 2500, 20: 10000 },
   },
   wildRules: { symbols: ['WILD'], expand: 'never' },
   scatterRules: {

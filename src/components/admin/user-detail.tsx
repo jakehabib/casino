@@ -88,7 +88,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             <Skeleton className="h-3.5 w-64" />
           </div>
         </div>
-        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="mt-6 grid gap-4 @5xl:grid-cols-[minmax(0,1fr)_360px]">
           <Skeleton className="h-80 rounded-xl" />
           <Skeleton className="h-80 rounded-xl" />
         </div>
@@ -105,7 +105,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
     <div>
       {back}
       {/* Identity header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 @3xl:flex-row @3xl:items-start @3xl:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <Avatar avatarUrl={u.avatarUrl} name={u.username} size={56} />
           <div className="min-w-0">
@@ -160,7 +160,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             ) : null}
           </div>
         ) : (
-          <RestrictedNote className="lg:max-w-xs">You can’t act on your own account or on staff with an equal or higher role.</RestrictedNote>
+          <RestrictedNote className="@3xl:max-w-xs">You can’t act on your own account or on staff with an equal or higher role.</RestrictedNote>
         )}
       </div>
 
@@ -174,9 +174,9 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="mt-5 grid gap-4 @5xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-4">
-          <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="grid gap-4 @2xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <Panel title="Account">
               <div className="mb-4 rounded-lg border border-line bg-surface-2 px-3.5 py-3">
                 <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-fg-subtle">Balance</div>

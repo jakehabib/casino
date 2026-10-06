@@ -312,7 +312,7 @@ export async function sendMessage(input: SendInput): Promise<ChatMessageDTO> {
         .map((id) =>
           emitToUser(id, 'chat:mention', {
             messageId: dto.id,
-            from: { username: dto.user.username, displayName: dto.user.displayName },
+            from: { id: dto.user.id, username: dto.user.username, displayName: dto.user.displayName },
             content: quote(dto.content),
           }),
         ),

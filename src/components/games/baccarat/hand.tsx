@@ -16,6 +16,7 @@ export function HandArea({
   revealed,
   total,
   size,
+  tight = false,
   natural,
   caption,
   state,
@@ -27,6 +28,8 @@ export function HandArea({
   revealed: number;
   total: number | null;
   size: CardSize;
+  /** Narrow table: fan the cards more tightly. */
+  tight?: boolean;
   natural: boolean;
   caption: string | null;
   state: 'idle' | 'win' | 'lose' | 'tie';
@@ -34,7 +37,7 @@ export function HandArea({
 }) {
   const tone = SIDE_TONE[side];
   const d = CARD_DIMS[size];
-  const overlap = Math.round(d.w * 0.2);
+  const overlap = Math.round(d.w * (tight ? 0.44 : 0.2));
   // Cards arrive from the shoe (top right of the table).
   const fromX = side === 'PLAYER' ? 260 : 110;
 

@@ -194,12 +194,12 @@ export function SettingsForm({
       }
       bodyClassName="p-0"
     >
-      <div className={cn('grid', aside && 'lg:grid-cols-[minmax(0,1fr)_260px]')}>
+      <div className={cn('grid', aside && '@4xl:grid-cols-[minmax(0,1fr)_260px]')}>
         <div className="space-y-5 p-4">
           {sections.map((s, i) => (
             <div key={i}>
               {s.title ? <div className="mb-3 text-2xs font-semibold uppercase tracking-[0.12em] text-fg-subtle">{s.title}</div> : null}
-              <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+              <div className="grid gap-x-5 gap-y-4 @xl:grid-cols-2">
                 {s.fields.map((f) => (
                   <FieldControl key={f.key} f={f} value={draft[f.key]} onChange={(v) => set(f.key, v)} error={errors[f.key]} changed={changes.some((c) => c.f.key === f.key)} />
                 ))}
@@ -207,7 +207,7 @@ export function SettingsForm({
             </div>
           ))}
         </div>
-        {aside ? <div className="border-t border-line-soft bg-surface-2/40 p-4 lg:border-l lg:border-t-0">{aside}</div> : null}
+        {aside ? <div className="border-t border-line-soft bg-surface-2/40 p-4 @4xl:border-l @4xl:border-t-0">{aside}</div> : null}
       </div>
       <footer className="flex flex-col gap-2 border-t border-line-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-xs text-fg-subtle">
@@ -264,7 +264,7 @@ const inputCls =
 
 function FieldShell({ f, error, changed, children, wide }: { f: FieldDef; error?: string; changed?: boolean; children: ReactNode; wide?: boolean }) {
   return (
-    <div className={cn('min-w-0', wide && 'sm:col-span-2')}>
+    <div className={cn('min-w-0', wide && '@xl:col-span-2')}>
       <div className="mb-1.5 flex items-center gap-1.5">
         <span className="text-[13px] font-medium text-fg-muted">{f.label}</span>
         {changed ? <span className="h-1.5 w-1.5 rounded-full bg-warn" aria-label="Modified" /> : null}
@@ -364,7 +364,7 @@ function FieldControl({ f, value, onChange, error, changed }: { f: FieldDef; val
       const m = value as Record<string, { enabled: boolean }>;
       return (
         <FieldShell f={f} error={error} changed={changed} wide>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 @xl:grid-cols-3">
             {f.machines.map((mc) => {
               const on = m[mc.id]?.enabled !== false;
               return (

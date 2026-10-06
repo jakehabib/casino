@@ -107,6 +107,7 @@ export function publicRound(r: CrashRound, now: number): CrashRoundPublic {
     status: r.status,
     seedHash: r.seedHash,
     salt: r.salt,
+    openedAt: r.createdAt.getTime(),
     bettingEndsAt: r.bettingEndsAt.getTime(),
     startedAt: r.startedAt?.getTime() ?? null,
     crashedAt: r.crashedAt?.getTime() ?? null,

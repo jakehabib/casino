@@ -113,7 +113,7 @@ export function AdminUsersList() {
         ) : (
           <>
             {/* Mobile: stacked rows */}
-            <ul className="divide-y divide-line-soft md:hidden">
+            <ul className="divide-y divide-line-soft @3xl:hidden">
               {data.items.map((u) => (
                 <li key={u.id}>
                   <button type="button" onClick={() => router.push(`/admin/users/${u.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-surface-2">
@@ -134,7 +134,7 @@ export function AdminUsersList() {
               ))}
             </ul>
             {/* Desktop: table */}
-            <div className={query.isFetching ? 'hidden opacity-70 transition-opacity md:block' : 'hidden md:block'}>
+            <div className={query.isFetching ? 'hidden opacity-70 transition-opacity @3xl:block' : 'hidden @3xl:block'}>
               <Table minWidth={860}>
                 <thead>
                   <tr>

@@ -75,6 +75,7 @@ export function BaccaratTable({ c }: { c: BaccaratController }) {
           revealed={pres.revealed}
           total={pTotal}
           size={size}
+          tight={compact}
           natural={naturalOn('PLAYER')}
           caption={pres.caption?.side === 'PLAYER' ? pres.caption.text : null}
           state={sideState('PLAYER')}
@@ -89,6 +90,7 @@ export function BaccaratTable({ c }: { c: BaccaratController }) {
           revealed={pres.revealed}
           total={bTotal}
           size={size}
+          tight={compact}
           natural={naturalOn('BANKER')}
           caption={pres.caption?.side === 'BANKER' ? pres.caption.text : null}
           state={sideState('BANKER')}
@@ -151,7 +153,7 @@ function StatusLine({ c }: { c: BaccaratController }) {
               net > 0 ? 'bg-win/15 text-win' : net === 0 ? 'bg-white/10 text-fg-muted' : 'bg-black/30 text-white/45',
             )}
           >
-            {net > 0 ? `+${formatCredits(net)}` : net === 0 ? 'Push' : formatCredits(net)}
+            {net > 0 ? `+${formatCredits(net)}` : net === 0 ? (result.bets.every((b) => b.outcome === 'PUSH') ? 'Push' : '±0') : formatCredits(net)}
           </span>
         ) : null}
       </span>

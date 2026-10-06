@@ -201,7 +201,7 @@ function Milestones({ r, me, claim, paused }: { r: RewardStatus; me: Me; claim: 
   const level = me.level.level;
   const claimable = r.levels.filter((l) => l.available).length;
   return (
-    <section className="rounded-xl border border-line bg-surface-1">
+    <section className="overflow-hidden rounded-xl border border-line bg-surface-1">
       <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div>
           <h2 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
@@ -251,7 +251,7 @@ function Milestones({ r, me, claim, paused }: { r: RewardStatus; me: Me; claim: 
                   <CreditIcon size={15} /> {formatCredits(l.amount)}
                 </div>
                 <div className="mt-0.5 text-xs text-fg-subtle">
-                  {l.claimed ? 'Claimed' : blocked ? 'Paused during your break' : l.reached ? 'Reached — claim your reward' : `Reach level ${l.level} · ${l.level - level} to go`}
+                  {l.claimed ? 'Claimed' : blocked ? 'Paused during your break' : l.reached ? 'Reached — claim your reward' : `Unlocks at level ${l.level}`}
                 </div>
               </div>
               {ready ? (

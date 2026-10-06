@@ -29,6 +29,19 @@ const DeleteSchema = z.object({ messageId: z.string().min(1).max(40), reason: z.
 /** Per-socket set of authors the viewer has blocked. */
 const blockCache = new WeakMap<NovaSocket, Set<string>>();
 
+/**
+ * Cheap in-memory guard on raw send attempts (accepted or not) so a flooding
+ * client can't make us hit the database for every rejected message. The
+ * authoritative limits live in the chat service.
+ */
+const attempts = new WeakMap<NovaSocket, { at: number; n: number }>();
+function floodGuard(socket: NovaSocket) {
+  const now = Date.now();
+  const a = attempts.get(socket);
+  if (!a || now - a.at > 10_000) return void attempts.set(socket, { at: now, n: 1 });
+  if (++a.n > 12) throw new AppError('RATE_LIMITED', 'You’re sending messages too quickly.', { reason: 'RATE', retryAfterSec: Math.ceil((a.at + 10_000 - now) / 1000) });
+}
+
 function fail(ack: Ack<never> | undefined, err: unknown, ctx: Record<string, unknown>) {
   if (typeof ack !== 'function') return;
   if (err instanceof AppError) return ack({ ok: false, error: { code: err.code, message: err.message, details: err.details } });
@@ -100,6 +113,7 @@ export async function register(io: NovaIO) {
       try {
         const user = socket.data.user;
         if (!user) throw new AppError('UNAUTHENTICATED', 'Sign in to chat.');
+        floodGuard(socket);
         const body = SendSchema.parse(payload);
         const msg = await sendMessage({ userId: user.id, content: body.content, replyToId: body.replyToId, clientId: body.clientId });
         if (typeof ack === 'function') ack({ ok: true, data: msg });

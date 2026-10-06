@@ -21,6 +21,8 @@ export interface CrashRoundPublic {
   status: CrashRoundStatus;
   seedHash: string;
   salt: string;
+  /** When betting opened. */
+  openedAt: number;
   bettingEndsAt: number;
   startedAt: number | null;
   crashedAt: number | null;
