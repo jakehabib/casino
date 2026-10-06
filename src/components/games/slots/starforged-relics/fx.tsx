@@ -410,36 +410,34 @@ export function relicPositions(o: SpinOutcome | null, symbol: string): Pos[] {
   return out;
 }
 
-/** Each relic on the final grid pulses and releases a "+1" that rises toward the meter. */
+/** Each relic on the final grid pulses and releases a "+1" that rises toward the meter (cleared on the next spin). */
 export function RelicCollectFx({ positions, reels, rows, reduced, active }: { positions: Pos[]; reels: number; rows: number; reduced: boolean; active: boolean }) {
+  if (!active) return null;
   return (
-    <AnimatePresence>
-      {active
-        ? positions.map(([r, y], i) => (
-            <motion.div
-              key={`${r}:${y}`}
-              className="absolute z-[16] flex items-center justify-center"
-              style={{ left: `${(r / reels) * 100}%`, top: `${(y / rows) * 100}%`, width: `${100 / reels}%`, height: `${100 / rows}%` }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.span
-                className="absolute inset-[8%] rounded-full"
-                style={{ boxShadow: '0 0 0 2px #ffb88a, 0 0 26px #ff8f5a' }}
-                initial={{ scale: 1.3, opacity: 0 }}
-                animate={{ scale: [1.3, 0.9, 1], opacity: [0, 1, 0.75] }}
-                transition={{ duration: reduced ? 0 : 0.5, delay: reduced ? 0 : i * 0.06 }}
-              />
-              <motion.span
-                className="relative text-sm font-black text-[#ffd2b0] drop-shadow-[0_2px_6px_#000] sm:text-lg"
-                initial={{ y: 0, opacity: 0 }}
-                animate={reduced ? { opacity: 1 } : { y: [0, -18, -54], opacity: [0, 1, 0] }}
-                transition={{ duration: 0.75, delay: i * 0.06, times: [0, 0.3, 1] }}
-              >
-                +1
-              </motion.span>
-            </motion.div>
-          ))
-        : null}
-    </AnimatePresence>
+    <>
+      {positions.map(([r, y], i) => (
+        <div
+          key={`${r}:${y}`}
+          className="absolute z-[16] flex items-center justify-center"
+          style={{ left: `${(r / reels) * 100}%`, top: `${(y / rows) * 100}%`, width: `${100 / reels}%`, height: `${100 / rows}%` }}
+        >
+          <motion.span
+            className="absolute inset-[8%] rounded-full"
+            style={{ boxShadow: '0 0 0 2px #ffb88a, 0 0 26px #ff8f5a' }}
+            initial={{ scale: 1.3, opacity: 0 }}
+            animate={{ scale: [1.3, 0.9, 1], opacity: [0, 1, 0.75] }}
+            transition={{ duration: reduced ? 0 : 0.5, delay: reduced ? 0 : i * 0.06 }}
+          />
+          <motion.span
+            className="relative text-sm font-black text-[#ffd2b0] drop-shadow-[0_2px_6px_#000] sm:text-lg"
+            initial={{ y: 0, opacity: 0 }}
+            animate={reduced ? { opacity: [1, 0] } : { y: [0, -18, -54], opacity: [0, 1, 0] }}
+            transition={{ duration: reduced ? 1.2 : 0.75, delay: reduced ? 0 : i * 0.06, times: reduced ? undefined : [0, 0.3, 1] }}
+          >
+            +1
+          </motion.span>
+        </div>
+      ))}
+    </>
   );
 }
