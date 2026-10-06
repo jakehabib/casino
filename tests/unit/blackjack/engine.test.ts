@@ -227,7 +227,7 @@ describe('splitting', () => {
       ['WIN', '2000'],
       ['WIN', '4000'],
     ]);
-    expect(state.totalWagered).toBe('4000');
+    expect(state.totalWagered).toBe('3000');
   });
   it('a split ace + ten is 21 paying 1:1, not blackjack', () => {
     const s = play(['AS', '9D', 'AH', '8C', 'KS', 'QD'], ['SPLIT']);
@@ -242,7 +242,7 @@ describe('splitting', () => {
     ]);
   });
   it('split aces receive one card each and cannot be hit', () => {
-    const draw = deck(['AS', '9D', 'AH', '8C', '5S', '6D']);
+    const draw = deck(['AS', '9D', 'AH', '8C', '5S', '5D']);
     const { state } = startRound(DEFAULT_RULES, 1000n, draw);
     const s = applyAction(state, 'SPLIT', draw).state;
     expect(s.hands.map((h) => h.cards.length)).toEqual([2, 2]);

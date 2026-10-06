@@ -22,6 +22,7 @@ import {
 } from '@/engines/crash/crash-math';
 import type {
   CrashBetPublic,
+  CrashRoundDetailData,
   CrashHistoryItem,
   CrashMyBet,
   CrashPublicUser,
@@ -30,6 +31,7 @@ import type {
   CrashSnapshot,
   CrashStatePayload,
 } from '@/engines/crash/types';
+import type { RoundDetail } from '@/lib/round-detail';
 
 /**
  * Launch (crash) — authoritative round + bet service.
@@ -191,10 +193,10 @@ export async function markCrashed(round: CrashRound) {
   return res.count === 1;
 }
 
-/** ACTIVE auto-cash-out bets whose target the round has reached (and that beat the crash). */
-export async function dueAutoCashouts(roundId: string, upToX100: number, crashPoint: number) {
+/** ACTIVE auto-cash-out bets whose target beats the crash point (the loop pays them as m reaches the target). */
+export async function pendingAutoCashouts(roundId: string, crashPoint: number) {
   return prisma.crashBet.findMany({
-    where: { roundId, status: 'ACTIVE', autoCashout: { not: null, lte: upToX100, lt: crashPoint } },
+    where: { roundId, status: 'ACTIVE', autoCashout: { not: null, lt: crashPoint } },
     select: { id: true, autoCashout: true },
   });
 }
@@ -553,3 +555,53 @@ export async function roundInfo(roundId: string): Promise<CrashRoundInfo> {
   };
 }
 
+
+/** RoundDetail for one of the viewer's own bets (history modal + verifier). */
+export async function getRoundDetail(userId: string, betId: string): Promise<RoundDetail<CrashRoundDetailData>> {
+  const bet = await prisma.crashBet.findUnique({ where: { id: betId }, include: { round: true } });
+  if (!bet || bet.userId !== userId) throw new AppError('NOT_FOUND', 'Round not found');
+  const r = bet.round;
+  const open = revealed(r);
+  const payout = bet.status === 'CASHED_OUT' || bet.status === 'REFUNDED' ? bet.payout : 0n;
+  const forced = open && isForced(r);
+  const summary =
+    bet.status === 'CASHED_OUT'
+      ? `Cashed out ${(bet.cashoutAt! / 100).toFixed(2)}×`
+      : bet.status === 'LOST'
+        ? `Crashed at ${(r.crashPoint / 100).toFixed(2)}×`
+        : bet.status === 'REFUNDED'
+          ? 'Round voided — stake refunded'
+          : 'In play';
+  return {
+    game: 'CRASH',
+    id: bet.id,
+    variant: null,
+    createdAt: bet.createdAt.toISOString(),
+    wager: toNum(bet.amount),
+    payout: toNum(payout),
+    net: toNum(payout - bet.amount),
+    summary,
+    fairness: {
+      serverSeedHash: r.seedHash,
+      clientSeed: r.salt,
+      nonce: r.roundNumber,
+      serverSeed: open ? r.seed : null,
+      revealed: open,
+      extra: { salt: r.salt, roundId: r.id, crashPointX100: open ? r.crashPoint : null },
+    },
+    forced,
+    data: {
+      roundId: r.id,
+      roundNumber: r.roundNumber,
+      slot: (bet.slot === 1 ? 1 : 0) as 0 | 1,
+      amount: toNum(bet.amount),
+      autoCashout: bet.autoCashout,
+      cashoutAt: bet.cashoutAt,
+      payout: toNum(payout),
+      status: bet.status,
+      crashPoint: open ? r.crashPoint : null,
+      startedAt: r.startedAt?.getTime() ?? null,
+      crashedAt: r.crashedAt?.getTime() ?? null,
+    },
+  };
+}

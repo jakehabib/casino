@@ -12,7 +12,7 @@ import {
   autoCashout,
   buildSnapshot,
   createRound,
-  dueAutoCashouts,
+  pendingAutoCashouts,
   latestRound,
   lockBetting,
   markCrashed,
@@ -241,7 +241,7 @@ export class CrashController {
   private async beginRunning(round: CrashRound) {
     this.stopTicker();
     this.tickRound = round;
-    const autos = await dueAutoCashouts(round.id, Number.MAX_SAFE_INTEGER, round.crashPoint);
+    const autos = await pendingAutoCashouts(round.id, round.crashPoint);
     this.autoQueue = autos.map((a) => ({ id: a.id, target: a.autoCashout! })).sort((a, b) => a.target - b.target);
     this.ticker = this.clock.setInterval(() => this.tick(), this.tickMs);
     this.tick();
