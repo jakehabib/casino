@@ -60,6 +60,16 @@ function ShoeGraphic({ shoe, anchor, compact }: { shoe: ShoeInfo | null; anchor:
         </svg>
         <div ref={anchor} className="absolute" style={{ left: '8%', top: '38%', width: '30%', height: '40%' }} />
       </div>
+      {shoe?.reshuffleNext ? (
+        <motion.span
+          initial={{ opacity: 0, y: -2 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-full bg-gold-soft px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-gold ring-1 ring-gold/30"
+          title="The cut card has been reached: a freshly shuffled shoe opens next round"
+        >
+          New shoe next
+        </motion.span>
+      ) : null}
       <div className="flex items-center gap-1.5">
         {!compact ? <span className="tabular text-[10px] font-medium text-white/40">{shoe ? `Shoe ${shoe.number}` : 'Shoe'}</span> : null}
         <div className="relative h-[3px] overflow-hidden rounded-full bg-black/45" style={{ width: compact ? 40 : 52 }} title="Cards remaining in the shoe">
@@ -71,29 +81,21 @@ function ShoeGraphic({ shoe, anchor, compact }: { shoe: ShoeInfo | null; anchor:
   );
 }
 
-/** Discard tray: acrylic tray whose stack grows with the cards dealt from this shoe. */
+/** Discard pile: face-down cards lying in the tray; thickness follows the cards dealt from this shoe. */
 function DiscardTray({ shoe, compact }: { shoe: ShoeInfo | null; compact: boolean }) {
-  const lines = shoe && shoe.dealt > 0 ? Math.max(1, Math.min(22, Math.round((shoe.dealt / shoe.total) * 30))) : 0;
-  const w = compact ? 40 : 52;
-  if (lines === 0) return null;
+  const layers = shoe && shoe.dealt > 0 ? Math.max(1, Math.min(14, Math.round((shoe.dealt / shoe.total) * 18))) : 0;
+  if (layers === 0) return null;
+  const w = compact ? 38 : 50;
+  const edge = Array.from({ length: layers }, (_, i) => `0 ${i + 1}px 0 ${i % 2 ? '#130f33' : '#2f2670'}`).join(', ');
   return (
-    <div className={cn('absolute z-10', compact ? 'left-2.5 top-2.5' : 'left-5 top-4')} aria-hidden>
-      <div
-        className="relative overflow-hidden rounded-[5px] border border-white/[0.09] bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-        style={{ width: w + 10, height: compact ? 34 : 44 }}
-      >
-        <div className="absolute inset-x-[5px] bottom-[4px] flex flex-col-reverse">
-          {Array.from({ length: lines }).map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: ((i * 7) % 3) - 1 }}
-              className="h-[2px] rounded-[1px] border-b border-black/50 bg-[#5446b8]"
-              style={{ width: w }}
-            />
-          ))}
-        </div>
-      </div>
+    <div className={cn('absolute z-10', compact ? 'left-3 top-3' : 'left-6 top-5')} aria-hidden title="Discard tray">
+      <motion.div
+        initial={false}
+        animate={{ boxShadow: `${edge}, 0 ${layers + 6}px 14px rgba(0,0,0,0.45)` }}
+        transition={{ duration: DUR.game }}
+        className="rounded-[3px] ring-1 ring-white/15"
+        style={{ width: w, height: Math.round(w * 0.68), transform: 'rotate(-5deg)', background: 'repeating-linear-gradient(45deg, #2a2160 0 3px, #221a52 3px 6px)' }}
+      />
     </div>
   );
 }
@@ -281,6 +283,7 @@ export function BlackjackTable({
                     active={i === view!.active && !settled}
                     multi={multi}
                     settled={settled}
+                    showAmount={multi}
                   />
                 ))}
               </div>

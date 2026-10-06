@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { route } from '@/server/api/handler';
 import { prisma, isUniqueViolation } from '@/server/db';
 import { AppError } from '@/lib/errors';
-import { UsernameSchema } from '@/server/services/account/account-service';
+import { UsernameSchema, RESERVED_USERNAMES } from '@/server/services/account/account-service';
 
 const Body = z.object({
   username: UsernameSchema.optional(),
@@ -34,6 +34,9 @@ export const GET = route({ auth: true }, async ({ user }) => {
 
 export const PATCH = route({ auth: true, body: Body, rateLimit: { bucket: 'profile', limit: 30, windowSec: 60 } }, async ({ user, body }) => {
   const { username, ...rest } = body;
+  if (username && RESERVED_USERNAMES.has(username.toLowerCase())) {
+    throw new AppError('VALIDATION', 'That username is reserved', { field: 'username' });
+  }
   try {
     await prisma.user.update({
       where: { id: user.id },

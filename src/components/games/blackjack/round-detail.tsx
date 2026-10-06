@@ -107,7 +107,7 @@ export function BlackjackRoundDetail({ detail }: { detail: RoundDetail<Blackjack
               <span className="flex flex-wrap items-center gap-1">
                 {a.cards.map((c, i) => (
                   <span key={i} className="inline-flex items-center gap-1 text-[11px] text-fg-subtle">
-                    {c.to === 'D' ? 'D' : d.hands.length > 1 ? `H${c.hand + 1}` : 'P'}
+                    {c.to === 'D' ? 'D' : d.hands.length > 1 && a.action !== 'DEAL' ? `H${c.hand + 1}` : 'P'}
                     <CardText code={c.card} />
                   </span>
                 ))}
@@ -121,7 +121,7 @@ export function BlackjackRoundDetail({ detail }: { detail: RoundDetail<Blackjack
         <span>{d.rules.decks} decks</span>
         <span>Blackjack pays {d.rules.blackjackPayout.replace(':', ' to ')}</span>
         <span>Dealer {d.rules.dealerHitsSoft17 ? 'hits' : 'stands on'} soft 17</span>
-        {d.segments[0] ? (
+        {d.segments[0] && d.segments[0].to > d.segments[0].from ? (
           <span className="tabular">
             Shoe cards {d.segments[0].from}–{Math.max(d.segments[0].from, d.segments[0].to - 1)}
           </span>

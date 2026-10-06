@@ -5,6 +5,7 @@ import { useHotkeys } from '@/components/ui/bet-controls';
 import { ErrorState } from '@/components/ui/states';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDisplayBalance } from '@/stores/balance-store';
+import { usePlayStatus } from '@/hooks/use-play-status';
 import { playSound } from '@/audio/audio-manager';
 import { useBlackjack } from './use-blackjack';
 import { BlackjackTable } from './table';
@@ -74,7 +75,16 @@ export default function BlackjackGame() {
   const inRound = bj.inRound;
   const busy = bj.pending !== null;
   const hasPrevious = !!view?.settled;
-  const canDeal = !!config?.enabled && !inRound && !busy && !bj.revealing && (balance === null || balance >= bet);
+  const { play } = usePlayStatus();
+  const blocked = !!play && !play.canPlay;
+  const canDeal = !!config?.enabled && !blocked && !inRound && !busy && !bj.revealing && (balance === null || balance >= bet);
+
+  // A restricted account keeps the table (not the betting controls) while it
+  // finishes a hand it had already started, including that hand's result.
+  const [spectate, setSpectate] = useState(false);
+  useEffect(() => {
+    if (inRound) setSpectate(true);
+  }, [inRound]);
 
   const onDeal = useCallback(() => {
     if (!canDeal) return;
@@ -108,7 +118,7 @@ export default function BlackjackGame() {
   const legal = view && !bj.revealing ? view.legal : [];
   const hotkeys = useMemo(
     () => ({
-      Space: () => (inRound ? (legal.includes('STAND') ? bj.act('STAND') : undefined) : onDeal()),
+      Space: inRound ? undefined : onDeal,
       h: legal.includes('HIT') ? () => bj.act('HIT') : undefined,
       s: legal.includes('STAND') ? () => bj.act('STAND') : undefined,
       d: legal.includes('DOUBLE') ? () => bj.act('DOUBLE') : undefined,
@@ -187,8 +197,7 @@ export default function BlackjackGame() {
       rules={<BlackjackRules config={config} />}
       controls={controls}
       stage={stage}
-      // A restricted account may still finish a hand it already started.
-      allowSpectate={inRound}
+      allowSpectate={spectate}
     />
   );
 }

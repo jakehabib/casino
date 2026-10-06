@@ -111,8 +111,8 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
           <TurboButton m={m} />
         </div>
         <div className="flex flex-1 items-center justify-end text-[11px] text-fg-subtle">
-          <span className="hidden lg:inline">
-            Spin <Kbd>Space</Kbd> · Turbo <Kbd>T</Kbd> · Bet <Kbd>↑↓</Kbd>
+          <span className="hidden whitespace-nowrap xl:inline">
+            <Kbd>Space</Kbd> spin · <Kbd>T</Kbd> turbo
           </span>
         </div>
       </div>

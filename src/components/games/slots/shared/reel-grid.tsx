@@ -1,5 +1,5 @@
 'use client';
-import { memo, useMemo, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/cn';
 import type { CellModel, CellState, PublicSlotDefinition, ReelColumn, SlotTheme } from './types';
@@ -123,6 +123,21 @@ const Reel = memo(function Reel({
   const filler = useMemo(() => fillerFor(def, reel, rows * 2), [def, reel, rows]);
   const pad = theme.cellPadding ?? 0.08;
   const stripDur = (anticipation ? 520 : turbo ? 180 : 240) * (rows / 3);
+  // Keep the blurred strip briefly under the landing symbols so a stop never shows an empty reel.
+  const [fading, setFading] = useState(false);
+  const was = useRef(spinning);
+  useEffect(() => {
+    if (was.current && !spinning) {
+      setFading(true);
+      const t = setTimeout(() => setFading(false), 240);
+      was.current = spinning;
+      return () => clearTimeout(t);
+    }
+    was.current = spinning;
+  }, [spinning]);
+  const showStrip = spinning || fading;
+  // A reel filled by one wild (expanded) gets a single column treatment.
+  const fullWild = !spinning && column.length > 0 && def.expandingWilds !== 'never' && def.wilds.includes(column[0].symbol) && column.every((c) => c.symbol === column[0].symbol);
 
   return (
     <div className="relative h-full overflow-hidden" style={divider ? { boxShadow: `inset 1px 0 0 ${divider}` } : undefined}>
@@ -137,8 +152,18 @@ const Reel = memo(function Reel({
         />
       ) : null}
 
-      {spinning ? (
-        <div className="absolute inset-0">
+      {fullWild ? (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-[3%] z-0 rounded-[10px]"
+          initial={{ opacity: 0, scaleY: 0.3 }}
+          animate={{ opacity: 1, scaleY: 1 }}
+          transition={{ duration: reduced ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+          style={{ boxShadow: `0 0 0 2px ${theme.highlight}, 0 0 34px -4px ${theme.highlight}`, background: `linear-gradient(180deg, ${theme.highlight}22, transparent 30%, transparent 70%, ${theme.highlight}22)` }}
+        />
+      ) : null}
+      {showStrip ? (
+        <div className="absolute inset-0 transition-opacity duration-200" style={{ opacity: spinning ? 1 : 0 }}>
           {reduced ? (
             <div className="absolute inset-0 animate-pulse bg-white/[0.03]" />
           ) : (
@@ -156,7 +181,8 @@ const Reel = memo(function Reel({
             </div>
           )}
         </div>
-      ) : (
+      ) : null}
+      {spinning ? null : (
         <AnimatePresence>
           {column.map((cell, y) => (
             <Cell

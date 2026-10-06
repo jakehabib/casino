@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { cn } from '@/lib/cn';
 
 /**
@@ -57,7 +58,9 @@ function Glyph({ kind }: { kind: (typeof PRESETS)[number]['glyph'] }) {
 
 export function Avatar({ avatarUrl, name, size = 32, className, ring }: { avatarUrl?: string | null; name: string; size?: number; className?: string; ring?: string }) {
   const p = PRESETS[presetIndex(avatarUrl, name)];
-  const id = `av-${presetIndex(avatarUrl, name)}`;
+  // Unique per instance: a gradient defined inside a display:none subtree (e.g. a
+  // hidden desktop panel) would otherwise blank out every avatar sharing its id.
+  const id = `av-${useId().replace(/:/g, '')}`;
   return (
     <span className={cn('relative inline-flex shrink-0 overflow-hidden rounded-full', className)} style={{ width: size, height: size, boxShadow: ring ? `0 0 0 2px ${ring}` : undefined }}>
       <svg viewBox="0 0 40 40" width={size} height={size} aria-label={name} role="img">

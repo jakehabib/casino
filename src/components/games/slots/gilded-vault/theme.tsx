@@ -105,25 +105,35 @@ function Background() {
 /** Free-spins transition: the handle spins, then the vault door swings open onto gold light. */
 function BonusArt({ open, reduced }: { open: boolean; reduced: boolean }) {
   return (
-    <div className="relative h-full w-full" style={{ perspective: 600 }}>
+    <div className="relative h-full w-full" style={{ perspective: 520 }}>
+      {/* the opening behind the door: recessed steel ring with gold light inside */}
+      <div
+        className="absolute inset-[4%] rounded-full"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, #fff6dc 0%, #f2d283 28%, #c8963a 55%, #3b2a10 78%, #121316 82%)',
+          boxShadow: 'inset 0 0 0 3px #2b2f36, inset 0 0 0 6px #6c747f, inset 0 8px 18px #000, 0 0 0 2px #000',
+        }}
+      />
       <motion.div
-        className="absolute inset-[-30%] rounded-full"
-        style={{ background: 'radial-gradient(closest-side, #fff3cf 0%, #e2b456aa 35%, #e2b45600 70%)' }}
-        initial={{ opacity: 0, scale: 0.6 }}
-        animate={{ opacity: open ? 1 : 0, scale: open ? 1 : 0.6 }}
-        transition={{ duration: reduced ? 0 : 0.8, delay: reduced ? 0 : 0.7 }}
+        className="absolute inset-[-45%] rounded-full"
+        style={{ background: 'radial-gradient(closest-side, #ffe9b0aa 0%, #e2b45644 45%, #e2b45600 75%)' }}
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: open ? 1 : 0, scale: open ? 1 : 0.5 }}
+        transition={{ duration: reduced ? 0 : 0.9, delay: reduced ? 0 : 0.9 }}
       />
       <motion.div
         className="absolute inset-0"
-        style={{ transformOrigin: '0% 50%' }}
+        style={{ transformOrigin: '2% 50%', transformStyle: 'preserve-3d' }}
         initial={{ rotateY: 0 }}
-        animate={{ rotateY: open && !reduced ? -78 : 0 }}
-        transition={{ duration: 0.9, delay: reduced ? 0 : 0.75, ease: [0.65, 0, 0.35, 1] }}
+        animate={{ rotateY: open && !reduced ? -62 : 0, opacity: open && reduced ? 0 : 1 }}
+        transition={{ duration: reduced ? 0.2 : 1.05, delay: reduced ? 0 : 0.8, ease: [0.65, 0, 0.35, 1] }}
       >
-        <svg viewBox="0 0 100 100" className="h-full w-full drop-shadow-[0_12px_30px_rgba(0,0,0,.8)]">
-          <VaultDoor turn={open && !reduced ? 240 : 0} turnMs={750} />
+        <svg viewBox="0 0 100 100" className="h-full w-full drop-shadow-[18px_10px_24px_rgba(0,0,0,.85)]">
+          <VaultDoor turn={open && !reduced ? 270 : 0} turnMs={800} />
         </svg>
       </motion.div>
+      {/* hinge */}
+      <div className="absolute left-[-4%] top-[30%] h-[40%] w-[9%] rounded-md" style={{ background: 'linear-gradient(90deg,#3a3f47,#c9cfd6,#5d646e)', boxShadow: '0 2px 6px #000' }} />
     </div>
   );
 }

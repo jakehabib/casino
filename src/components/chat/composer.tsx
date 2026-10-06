@@ -33,7 +33,7 @@ function ReadOnlyNotice({ status }: { status: ChatStatus }) {
     return (
       <div className={base} data-testid="chat-readonly">
         <Lock size={15} className="shrink-0 text-fg-subtle" />
-        <span className="flex-1 text-fg-muted">Sign in to join the conversation.</span>
+        <span className="flex-1 text-fg-muted">Join the conversation.</span>
         <Link href="/login" className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-accent px-3 text-[13px] font-semibold text-white transition-colors hover:bg-accent-hover">
           <LogIn size={14} />
           Sign in to chat

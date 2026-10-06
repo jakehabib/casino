@@ -46,9 +46,10 @@ export function ProfileHero({
               <span className="text-fg-faint">·</span>
               <span className={cn('font-medium', tier === 'neutral' ? 'text-fg-muted' : tier === 'gold' || tier === 'prestige' ? 'text-gold' : 'text-fg-muted')}>{TIER_LABEL[tier]} tier</span>
             </div>
-            {meta ? <div className="mt-2.5 flex flex-wrap items-center gap-1.5">{meta}</div> : null}
+            {meta ? <div className="mt-2.5 hidden flex-wrap items-center gap-1.5 sm:flex">{meta}</div> : null}
           </div>
         </div>
+        {meta ? <div className="-mt-1 flex flex-wrap items-center gap-1.5 sm:hidden">{meta}</div> : null}
         {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
       </div>
       {children ? <div className="relative border-t border-line px-5 py-4 sm:px-6">{children}</div> : null}

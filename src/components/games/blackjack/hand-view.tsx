@@ -123,7 +123,7 @@ export function TotalPill({ total, soft, tone = 'default', label, className }: {
   );
 }
 
-export function ResultBanner({ hand }: { hand: HandView }) {
+export function ResultBanner({ hand, showAmount = true }: { hand: HandView; showAmount?: boolean }) {
   if (!hand.outcome) return null;
   const net = hand.payout - hand.bet;
   const map = {
@@ -143,7 +143,7 @@ export function ResultBanner({ hand }: { hand: HandView }) {
       data-testid="bj-result"
     >
       {m.text}
-      {net > 0 ? <span className="font-semibold normal-case tracking-normal">+{formatCredits(net)}</span> : null}
+      {net > 0 && showAmount ? <span className="font-semibold normal-case tracking-normal">+{formatCredits(net)}</span> : null}
     </motion.div>
   );
 }
@@ -211,6 +211,7 @@ export function PlayerHand({
   multi,
   index,
   settled,
+  showAmount,
 }: {
   roundId: string;
   hand: HandView;
@@ -220,6 +221,8 @@ export function PlayerHand({
   multi: boolean;
   index: number;
   settled: boolean;
+  /** Per-hand amounts (multi-hand rounds); single hands show the round total centrally. */
+  showAmount: boolean;
 }) {
   const highlight = hand.outcome === 'BLACKJACK' ? 'gold' : hand.outcome === 'WIN' ? 'win' : null;
   const dim = hand.outcome === 'LOSS' || hand.outcome === 'BUST' || (multi && !active && !settled && !hand.outcome);
@@ -242,7 +245,7 @@ export function PlayerHand({
       <div className={cn('relative rounded-xl transition-opacity duration-300', dim && !hand.outcome && 'opacity-75')}>
         <CardFan roundId={roundId} cards={hand.cards} size={size} doubled={hand.doubled} seen={seen} highlight={highlight} dim={hand.outcome === 'LOSS' || hand.outcome === 'BUST'} />
         <div className="pointer-events-none absolute inset-x-0 -bottom-3 z-30 flex justify-center">
-          <AnimatePresence>{hand.outcome ? <ResultBanner key="r" hand={hand} /> : null}</AnimatePresence>
+          <AnimatePresence>{hand.outcome ? <ResultBanner key="r" hand={hand} showAmount={showAmount} /> : null}</AnimatePresence>
         </div>
       </div>
       <div className="mt-5 flex h-9 items-center gap-2">

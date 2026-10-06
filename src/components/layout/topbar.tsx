@@ -34,6 +34,7 @@ export function TopBar() {
   const { data: me, isLoading } = useMe();
   const chatOpen = useUi((s) => s.chatOpen);
   const toggleChat = useUi((s) => s.toggleChat);
+  const setMobileChatOpen = useUi((s) => s.setMobileChatOpen);
   const unread = useChatUnread().count;
   return (
     <header className="sticky top-0 z-[var(--z-header)] flex h-14 items-center gap-2 border-b border-line-soft bg-bg/85 px-3 backdrop-blur-xl sm:h-16 sm:gap-3 sm:px-5">
@@ -58,6 +59,9 @@ export function TopBar() {
             <IconButton label={chatOpen ? 'Hide chat' : 'Show chat'} tone={chatOpen ? 'active' : 'filled'} onClick={toggleChat} badge={chatOpen ? undefined : unread} className="hidden xl:inline-flex">
               <MessageSquare size={17} />
             </IconButton>
+            <IconButton label="Open chat" tone="filled" onClick={() => setMobileChatOpen(true)} badge={unread} className="hidden lg:inline-flex xl:hidden">
+              <MessageSquare size={17} />
+            </IconButton>
           </>
         ) : (
           <>
@@ -68,6 +72,9 @@ export function TopBar() {
               <Button size="sm">Create account</Button>
             </Link>
             <IconButton label={chatOpen ? 'Hide chat' : 'Show chat'} tone={chatOpen ? 'active' : 'filled'} onClick={toggleChat} badge={chatOpen ? undefined : unread} className="hidden xl:inline-flex">
+              <MessageSquare size={17} />
+            </IconButton>
+            <IconButton label="Open chat" tone="filled" onClick={() => setMobileChatOpen(true)} badge={unread} className="hidden lg:inline-flex xl:hidden">
               <MessageSquare size={17} />
             </IconButton>
           </>

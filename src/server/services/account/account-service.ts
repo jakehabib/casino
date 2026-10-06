@@ -31,13 +31,13 @@ export const RegisterSchema = z.object({
   acceptTerms: z.literal(true, { message: 'Please confirm you understand Credits have no value' }),
 });
 
-const RESERVED = new Set(['admin', 'nova', 'support', 'moderator', 'system', 'root', 'staff']);
+export const RESERVED_USERNAMES = new Set(['admin', 'nova', 'support', 'moderator', 'system', 'root', 'staff']);
 
 export async function registerUser(input: z.infer<typeof RegisterSchema>) {
   const system = await getSetting('system');
   if (!system.registrationOpen) throw new AppError('FORBIDDEN', 'Registration is currently closed.');
   const username = input.username.toLowerCase();
-  if (RESERVED.has(username)) throw new AppError('VALIDATION', 'That username is reserved', { field: 'username' });
+  if (RESERVED_USERNAMES.has(username)) throw new AppError('VALIDATION', 'That username is reserved', { field: 'username' });
 
   const passwordHash = await hashPassword(input.password);
   const { signupGrant } = await getSetting('rewards');

@@ -45,8 +45,9 @@ async function postWithRetry<T>(url: string, body: unknown): Promise<T> {
  *    screen, stepped towards `server` through paced reveal frames.
  *  • A new server state is always accepted immediately — any running reveal is
  *    re-planned from what is currently displayed.
- *  • Balance: the stake is held (shown deducted) when a request is sent; the
- *    payout lands when the result frame is revealed.
+ *  • Balance: stakes show as deducted as soon as the server accepts them;
+ *    a settled round's returns are held back and land when the result frame
+ *    is revealed (never before).
  */
 export function useBlackjack() {
   const qc = useQueryClient();
@@ -120,9 +121,13 @@ export function useBlackjack() {
     (res: BlackjackResponse) => {
       setShoe(res.shoe);
       const bal = useBalance.getState();
+      if (res.game.settled && !res.replayed) {
+        // Show the balance without this round's returns until the result is revealed.
+        bal.hold(res.balance - res.game.totalPayout);
+        releaseOnFinal.current = true;
+      }
       bal.set(res.balance);
-      if (res.game.settled) releaseOnFinal.current = true;
-      else bal.release();
+      if (!releaseOnFinal.current) bal.release();
       present(res.game);
       qc.setQueryData<ActiveResponse>(ACTIVE_KEY, (old) =>
         old ? { ...old, game: res.game.settled ? null : res.game, shoe: res.shoe, balance: res.balance } : old,
@@ -135,10 +140,15 @@ export function useBlackjack() {
     [present, qc],
   );
 
-  const holdStake = (stake: number) => {
+  /**
+   * Freeze the displayed balance while a request is in flight: realtime
+   * wallet pushes can arrive before the HTTP response and must not reveal a
+   * payout early. Releasing on error is a no-op (nothing changed).
+   */
+  const freeze = () => {
     const s = useBalance.getState();
     const shown = s.held ?? s.balance;
-    if (shown !== null) s.hold(Math.max(0, shown - stake));
+    if (shown !== null) s.hold(shown);
   };
 
   const deal = useCallback(
@@ -147,7 +157,7 @@ export function useBlackjack() {
       const rid = requestId();
       setPending('DEAL');
       releaseOnFinal.current = false;
-      holdStake(bet);
+      freeze();
       playSound('chipStack');
       try {
         const res = await postWithRetry<BlackjackResponse>('/api/games/blackjack/deal', { bet, requestId: rid });
@@ -179,11 +189,8 @@ export function useBlackjack() {
       const rid = requestId();
       setPending(action);
       releaseOnFinal.current = false;
-      const h = current.hands[current.active];
-      const stake =
-        action === 'DOUBLE' || action === 'SPLIT' ? (h?.bet ?? 0) : action === 'INSURANCE' ? Math.floor(current.baseBet / 2) : 0;
-      holdStake(stake);
-      if (stake > 0) playSound('chip');
+      freeze();
+      if (action === 'DOUBLE' || action === 'SPLIT' || action === 'INSURANCE') playSound('chip');
       try {
         const res = await postWithRetry<BlackjackResponse>('/api/games/blackjack/action', {
           gameId: current.id,
