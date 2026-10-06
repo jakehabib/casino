@@ -45,7 +45,7 @@ export const GAME_FACTS: Record<string, string[]> = {
   baccarat: ['8 decks', 'Banker 5% commission', 'Tie 8:1', 'Bead plate'],
   roulette: ['Single zero', '2.70% edge', 'All inside bets'],
   crash: ['Multiplayer', 'Auto cash-out', '99% RTP'],
-  'gilded-vault': ['20 paylines', 'Free spins', 'Expanding wilds', '96.1% RTP'],
-  overcharge: ['1,024 ways', 'Cascades', 'Up to 10× chain', '96.0% RTP'],
-  'starforged-relics': ['Cluster pays', 'Random modifiers', 'Upgrading bonus', '96.2% RTP'],
+  'gilded-vault': ['20 paylines', 'Free spins', 'Expanding wilds', '96.19% RTP'],
+  overcharge: ['1,024 ways', 'Cascades', 'Up to 10× chain', '95.80% RTP'],
+  'starforged-relics': ['Cluster pays', 'Random modifiers', 'Upgrading bonus', '96.27% RTP'],
 };

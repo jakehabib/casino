@@ -82,7 +82,7 @@ export const gildedVault: SlotDefinition = {
   },
   bonusRules: {},
   rtpTarget: 96,
-  rtpSimulated: { rtp: 96.17, rounds: 5_000_000 },
+  rtpSimulated: { rtp: 96.19, rounds: 10_000_000 },
   volatility: 'medium',
   maxWinX: 2500,
   featureText: [

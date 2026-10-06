@@ -67,7 +67,7 @@ export const starforgedRelics: SlotDefinition = {
   scatterRules: {
     symbol: 'SCATTER',
     minCount: 4,
-    pays: { 4: 300, 5: 1000, 6: 5000 },
+    pays: { 4: 400, 5: 1000, 6: 5000 },
     freeSpins: { 4: 10, 5: 12, 6: 15 },
     retrigger: { 4: 5, 5: 7, 6: 10 },
   },
@@ -91,7 +91,7 @@ export const starforgedRelics: SlotDefinition = {
   },
   expander: { symbol: 'SUPERNOVA', wild: 'WILD', radius: 1 },
   rtpTarget: 96,
-  rtpSimulated: { rtp: 96.07, rounds: 5_000_000 },
+  rtpSimulated: { rtp: 96.27, rounds: 10_000_000 },
   volatility: 'high',
   maxWinX: 10000,
   featureText: [

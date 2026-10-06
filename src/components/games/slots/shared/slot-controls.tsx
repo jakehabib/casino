@@ -100,7 +100,7 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
 
       {/* Tablet / desktop */}
       <div className="hidden items-center gap-4 md:flex">
-        <div className="flex min-w-0 flex-1 items-center gap-6">
+        <div className="flex min-w-0 flex-1 items-center gap-4 lg:gap-6">
           <Readout label="Balance" value={balance} icon />
           <Readout label="Last win" value={m.lastWin} tone={m.lastWin > 0 ? 'win' : 'muted'} />
         </div>
@@ -128,10 +128,10 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
 function Readout({ label, value, tone = 'default', icon, align = 'left' }: { label: string; value: number | null; tone?: 'default' | 'win' | 'muted'; icon?: boolean; align?: 'left' | 'right' }) {
   return (
     <div className={cn('min-w-0', align === 'right' && 'text-right')}>
-      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">{label}</div>
+      <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-subtle">{label}</div>
       <div
         className={cn(
-          'tabular mt-0.5 flex items-center gap-1.5 text-[15px] font-bold',
+          'tabular mt-0.5 flex items-center gap-1.5 whitespace-nowrap text-[15px] font-bold',
           align === 'right' && 'justify-end',
           tone === 'win' ? 'text-win' : tone === 'muted' ? 'text-fg-muted' : 'text-fg',
         )}
@@ -174,6 +174,10 @@ function SpinButton({ m, disabled, label, className }: { m: SlotMachineControlle
       title={label}
       disabled={disabled}
       onClick={onClick}
+      // Space is handled by the page hotkey; stop the native keyup "click" so one press = one action.
+      onKeyUp={(e) => {
+        if (e.key === ' ') e.preventDefault();
+      }}
       whileTap={{ scale: 0.94 }}
       className={cn(
         'relative flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full text-white outline-offset-4 transition-[filter,opacity] disabled:opacity-40 md:h-[64px] md:w-[64px]',

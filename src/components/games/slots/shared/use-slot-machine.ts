@@ -51,13 +51,23 @@ function toColumns(grid: Grid, dropFrom: number): ReelColumn[] {
   return grid.map((col) => col.map((symbol) => ({ key: nextKey(), symbol, dropFrom })));
 }
 
-/** Deterministic, cosmetic attract grid for a first visit (no outcome meaning). */
+/** Deterministic, cosmetic attract grid for a first visit (no outcome meaning, never a win line). */
 function attractGrid(def: PublicSlotDefinition): Grid {
   const pool = def.symbols.filter((s) => s.kind === 'regular').map((s) => s.id);
   const grid: Grid = [];
+  let x = def.id.length * 2654435761;
   for (let r = 0; r < def.reels; r++) {
     const col: string[] = [];
-    for (let y = 0; y < def.rows; y++) col.push(pool[(r * 3 + y * 5 + r * y) % pool.length]);
+    for (let y = 0; y < def.rows; y++) {
+      let pick = '';
+      for (let tries = 0; tries < 8; tries++) {
+        x = (Math.imul(x, 1103515245) + 12345) >>> 0;
+        pick = pool[(x >>> 8) % pool.length];
+        // avoid same symbol as the neighbour to the left or above
+        if (pick !== grid[r - 1]?.[y] && pick !== col[y - 1]) break;
+      }
+      col.push(pick);
+    }
     grid.push(col);
   }
   return grid;
