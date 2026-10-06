@@ -28,7 +28,6 @@ describe('reveal frames', () => {
     const frames = buildFrames(null, view(state));
     const counts = frames.map((f) => f.view.hands[0].cards.length + f.view.dealer.cards.length);
     expect(counts).toEqual([0, 1, 2, 3, 4, 4]);
-    expect(frames.every((f) => f.view.dealer.cards[1]?.c ?? null) === null || true).toBe(true);
     for (const f of frames) if (f.view.dealer.cards[1]) expect(f.view.dealer.cards[1].c).toBeNull();
     expect(frames.at(-1)!.final).toBe(true);
     expect(frames.at(-1)!.view.legal).toEqual(['HIT', 'STAND', 'DOUBLE']);
