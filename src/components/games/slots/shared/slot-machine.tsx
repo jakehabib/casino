@@ -28,7 +28,7 @@ import type { SlotTheme } from './types';
 export function SlotStage({
   m,
   theme,
-  maxReelHeight = 'min(56vh, 540px)',
+  maxReelHeight = 'min(calc(100dvh - 430px), 520px)',
   header,
   className,
 }: {
@@ -66,21 +66,22 @@ export function SlotStage({
   return (
     <div className={cn('relative isolate overflow-hidden rounded-xl border border-line bg-bg-raised', className)} data-testid="slot-stage">
       {theme.background ? <div className="pointer-events-none absolute inset-0 -z-10">{theme.background}</div> : null}
-      <div className="flex flex-col items-center px-2.5 pb-3 pt-3 sm:px-6 sm:pb-5 sm:pt-5">
-        {theme.logo ? <div className="mb-2 sm:mb-3">{theme.logo}</div> : null}
-        {header}
-        <div className="mb-2 flex min-h-[44px] w-full items-center justify-center sm:mb-3">
-          {m.bonus ? (
-            <BonusHud def={def} bonus={m.bonus} current={m.fsCurrent} accentClass={theme.accentText} />
-          ) : ladder ? (
-            <MultiplierLadder ladder={ladder} active={ladderActive} />
-          ) : null}
+      <div className="flex flex-col items-center px-2.5 pb-6 pt-3 sm:px-6 sm:pb-8 sm:pt-4">
+        {/* Top row: logo in the base game, bonus HUD during free spins (same slot, no layout jump). */}
+        <div className="mb-2.5 flex min-h-[46px] w-full items-center justify-center sm:mb-3">
+          {m.bonus ? <BonusHud def={def} bonus={m.bonus} current={m.fsCurrent} accentClass={theme.accentText} /> : (theme.logo ?? null)}
         </div>
+        {header}
+        {ladder && !m.bonus ? (
+          <div className="mb-2.5 flex w-full justify-center sm:mb-3">
+            <MultiplierLadder ladder={ladder} active={ladderActive} />
+          </div>
+        ) : null}
         <div className="relative w-full" style={{ maxWidth: `calc(${maxReelHeight} * ${ratio})` }}>
           {theme.Frame ? theme.Frame({ children: reels, inBonus: !!m.bonus }) : <div className="overflow-hidden rounded-lg border border-line">{reels}</div>}
-        </div>
-        <div className="mt-2.5 flex h-9 items-center justify-center sm:mt-3.5">
-          <WinTicker amount={m.winAmount} bet={m.lastOutcome?.betLevel ?? m.bonus?.betLevel ?? m.betLevel} multiplier={m.busy ? m.stepMultiplier : undefined} />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex translate-y-1/2 justify-center">
+            <WinTicker amount={m.winAmount} bet={m.lastOutcome?.betLevel ?? m.bonus?.betLevel ?? m.betLevel} multiplier={m.busy ? m.stepMultiplier : undefined} />
+          </div>
         </div>
       </div>
 
