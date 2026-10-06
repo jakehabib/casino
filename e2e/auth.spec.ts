@@ -1,4 +1,4 @@
-import { test, expect, uniqueName, PASSWORD, registerViaApi, balanceOf } from './fixtures';
+import { test, expect, uniqueName, PASSWORD, registerViaApi, balanceOf, expectHeaderBalance } from './fixtures';
 
 test.describe('Authentication', () => {
   test('Register: a new player can create an account and lands in the lobby signed in', async ({ page, context }) => {
@@ -24,7 +24,7 @@ test.describe('Authentication', () => {
     // Server agrees: session exists and the sign-up grant landed.
     const balance = await balanceOf(context.request);
     expect(balance).toBeGreaterThan(0);
-    await expect.poll(async () => Number((await page.getByTestId('balance').innerText()).replace(/[^\d]/g, ''))).toBe(balance);
+    await expectHeaderBalance(page, balance);
   });
 
   test('Login: an existing player signs in with username and password', async ({ page, context, baseURL }) => {

@@ -91,7 +91,8 @@ export async function balanceOf(req: APIRequestContext): Promise<number> {
 
 /** Parse the header balance pill ("100,000" → 100000). */
 export async function headerBalance(page: Page): Promise<number> {
-  const txt = (await page.getByTestId('balance').first().innerText()).replace(/[^\d]/g, '');
+  // First .tabular span is the AnimatedNumber; a transient "+delta" span may follow it.
+  const txt = (await page.getByTestId('balance').first().locator('span.tabular').first().innerText()).replace(/[^\d]/g, '');
   return Number(txt);
 }
 

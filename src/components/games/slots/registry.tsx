@@ -23,10 +23,6 @@ const Interim = dynamic(() => import('./shared/interim-machine'), { loading, ssr
 
 export const SLOT_UIS: Record<string, ComponentType> = {
   'gilded-vault': dynamic(() => import('./gilded-vault/gilded-vault-machine'), { loading, ssr: false }),
-  overcharge: function OverchargeInterim() {
-    return <Interim slotId="overcharge" />;
-  },
-  'starforged-relics': function StarforgedInterim() {
-    return <Interim slotId="starforged-relics" />;
-  },
+  overcharge: dynamic(() => import('./overcharge/overcharge-machine'), { loading, ssr: false }),
+  'starforged-relics': dynamic(() => import('./starforged-relics/starforged-machine'), { loading, ssr: false }),
 };
