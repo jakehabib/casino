@@ -91,6 +91,7 @@ export const starforgedRelics: SlotDefinition = {
   },
   expander: { symbol: 'SUPERNOVA', wild: 'WILD', radius: 1 },
   rtpTarget: 96,
+  rtpSimulated: { rtp: 96.07, rounds: 5_000_000 },
   volatility: 'high',
   maxWinX: 10000,
   featureText: [

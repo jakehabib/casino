@@ -30,6 +30,8 @@ export interface PublicSlotDefinition {
   modeCount: number;
   volatility: Volatility;
   rtpTarget: number;
+  /** Measured RTP (%) over `rounds` simulated rounds. */
+  rtpSimulated: { rtp: number; rounds: number };
   maxWinX: number;
   symbols: PublicSymbol[];
   /** Paying symbols, highest first. Values are per line (lines) / per way (ways) / per cluster (cluster). */
@@ -65,6 +67,7 @@ export function toPublicDefinition(def: SlotDefinition): PublicSlotDefinition {
     modeCount: def.mode === 'lines' ? (def.paylines?.length ?? 0) : def.mode === 'ways' ? def.rows ** def.reels : (def.clusterMin ?? 5),
     volatility: def.volatility,
     rtpTarget: def.rtpTarget,
+    rtpSimulated: def.rtpSimulated,
     maxWinX: def.maxWinX,
     symbols: def.symbols.map((s) => ({
       id: s.id,

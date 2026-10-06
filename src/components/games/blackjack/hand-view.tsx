@@ -12,6 +12,13 @@ import type { HandView, ViewCard } from '@/engines/blackjack/view';
 /** Where cards fly in from (the shoe graphic). */
 export const ShoeAnchor = createContext<RefObject<HTMLDivElement | null> | null>(null);
 
+/**
+ * Keys ("<roundId>:<cardId>") of cards already on the table. A card not in
+ * the registry when it mounts is dealt from the shoe; a card that remounts
+ * (e.g. moved to a new hand by a split) or was restored after a refresh is not.
+ */
+export const DealtRegistry = createContext<RefObject<Set<string>> | null>(null);
+
 /** Deterministic tiny tilt per card so stacks look hand-dealt, not stamped. */
 function tilt(i: number) {
   return (((i * 37) % 9) - 4) * 0.45;
@@ -45,29 +52,34 @@ function DealtCard({
   top,
   rotate,
   z,
-  fromShoe,
+  cardKey,
   highlight,
   dim,
 }: {
   card: ViewCard;
+  cardKey: string;
   layoutKey: string;
   size: CardSize;
   left: number;
   top: number;
   rotate: number;
   z: number;
-  fromShoe: boolean;
   highlight?: 'win' | 'gold' | null;
   dim?: boolean;
 }) {
   const shoe = useContext(ShoeAnchor);
+  const registry = useContext(DealtRegistry);
   const inner = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
   useLayoutEffect(() => {
     const el = inner.current;
     const src = shoe?.current;
-    if (!fromShoe || !el) return;
+    const seen = registry?.current;
+    const fresh = !!seen && !seen.has(cardKey);
+    seen?.add(cardKey);
+    if (!fresh || !el) return;
+    el.style.opacity = '0'; // hidden until the flight starts (before paint)
     if (reduced || !src) {
       animate(el, { opacity: [0, 1] }, { duration: DUR.standard });
       return;
@@ -94,7 +106,7 @@ function DealtCard({
       transition={SPRING.card}
       exit={{ opacity: 0, y: -16, transition: { duration: DUR.standard, ease: EASE.out } }}
     >
-      <div ref={inner} className="will-change-transform" style={fromShoe ? { opacity: 0 } : undefined}>
+      <div ref={inner} className="will-change-transform">
         <div style={{ transform: `rotate(${rotate}deg)`, transition: 'transform 300ms var(--ease-out-quint)' }}>
           <PlayingCard code={card.c} size={size} highlight={highlight} dim={dim} />
         </div>
@@ -103,8 +115,7 @@ function DealtCard({
   );
 }
 
-export function TotalPill({ total, soft, tone = 'default', label, className }: { total: string | number; soft?: boolean; tone?: 'default' | 'active' | 'bust' | 'win' | 'gold'; label?: string; className?: string }) {
-  void soft;
+export function TotalPill({ total, tone = 'default', label, className }: { total: string | number; tone?: 'default' | 'active' | 'bust' | 'win' | 'gold'; label?: string; className?: string }) {
   return (
     <span
       className={cn(
@@ -154,7 +165,6 @@ export function CardFan({
   cards,
   size,
   doubled,
-  seen,
   highlight,
   dim,
 }: {
@@ -162,8 +172,6 @@ export function CardFan({
   cards: ViewCard[];
   size: CardSize;
   doubled?: boolean;
-  /** Card keys already on screen — anything else flies in from the shoe. */
-  seen: Set<string>;
   highlight?: 'win' | 'gold' | null;
   dim?: boolean;
 }) {
@@ -183,6 +191,7 @@ export function CardFan({
           return (
             <DealtCard
               key={key}
+              cardKey={key}
               layoutKey={`bjcard-${key}`}
               card={c}
               size={size}
@@ -190,7 +199,6 @@ export function CardFan({
               top={top}
               rotate={sideways ? 90 : tilt(c.i)}
               z={idx + 1}
-              fromShoe={!seen.has(key)}
               highlight={highlight}
               dim={dim}
             />
@@ -206,7 +214,6 @@ export function PlayerHand({
   roundId,
   hand,
   size,
-  seen,
   active,
   multi,
   index,
@@ -216,7 +223,6 @@ export function PlayerHand({
   roundId: string;
   hand: HandView;
   size: CardSize;
-  seen: Set<string>;
   active: boolean;
   multi: boolean;
   index: number;
@@ -243,7 +249,7 @@ export function PlayerHand({
         ) : null}
       </div>
       <div className={cn('relative rounded-xl transition-opacity duration-300', dim && !hand.outcome && 'opacity-75')}>
-        <CardFan roundId={roundId} cards={hand.cards} size={size} doubled={hand.doubled} seen={seen} highlight={highlight} dim={hand.outcome === 'LOSS' || hand.outcome === 'BUST'} />
+        <CardFan roundId={roundId} cards={hand.cards} size={size} doubled={hand.doubled} highlight={highlight} dim={hand.outcome === 'LOSS' || hand.outcome === 'BUST'} />
         <div className="pointer-events-none absolute inset-x-0 -bottom-3 z-30 flex justify-center">
           <AnimatePresence>{hand.outcome ? <ResultBanner key="r" hand={hand} showAmount={showAmount} /> : null}</AnimatePresence>
         </div>

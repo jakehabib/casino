@@ -166,6 +166,8 @@ export interface SlotDefinition {
   expander?: ExpanderRules;
   /** Target RTP in percent (e.g. 96). Verified by scripts/simulate.ts. */
   rtpTarget: number;
+  /** Measured RTP (%) and round count from scripts/simulate.ts (documented in docs/SLOT_MATH.md). */
+  rtpSimulated: { rtp: number; rounds: number };
   volatility: Volatility;
   /** Max win per ROUND (paid spin + its free spins) in × total bet. Enforced by the engine. */
   maxWinX: number;

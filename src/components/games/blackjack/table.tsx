@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import type { CardSize } from '@/components/ui/playing-card';
 import { ChipStackView } from '@/components/ui/casino-chip';
@@ -10,7 +10,7 @@ import { formatTotal } from '@/engines/blackjack/view';
 import type { ShoeInfo } from '@/server/services/blackjack/shoe-service';
 import type { BlackjackTableConfig } from '@/server/services/blackjack/blackjack-service';
 import type { RoundView } from './reveal';
-import { CardFan, PlayerHand, ShoeAnchor, TotalPill, handWidth } from './hand-view';
+import { CardFan, DealtRegistry, PlayerHand, ShoeAnchor, TotalPill, handWidth } from './hand-view';
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -168,7 +168,7 @@ export function BlackjackTable({
   onBetSpot,
   canBet,
   actionBar,
-  instantIds,
+  dealt,
 }: {
   view: RoundView | null;
   shoe: ShoeInfo | null;
@@ -177,31 +177,14 @@ export function BlackjackTable({
   onBetSpot?: () => void;
   canBet: boolean;
   actionBar: ReactNode;
-  /** Round restored without animation: its cards are already "on screen". */
-  instantIds: string | null;
+  /** Registry of cards already on the table (owned by useBlackjack). */
+  dealt: RefObject<Set<string>>;
 }) {
   const shoeAnchor = useRef<HTMLDivElement>(null);
   const [ref, width] = useWidth<HTMLDivElement>();
   const compact = width > 0 && width < 640;
 
-  // Cards already presented — anything else flies in from the shoe.
-  const seenRef = useRef(new Set<string>());
   const roundId = view?.id ?? 'none';
-  const seen = useMemo(() => {
-    const s = new Set(seenRef.current);
-    if (view && instantIds === view.id) {
-      for (const c of view.dealer.cards) s.add(`${view.id}:${c.i}`);
-      for (const h of view.hands) for (const c of h.cards) s.add(`${view.id}:${c.i}`);
-    }
-    return s;
-  }, [view, instantIds]);
-  useEffect(() => {
-    if (!view) return;
-    const s = seenRef.current;
-    for (const c of view.dealer.cards) s.add(`${view.id}:${c.i}`);
-    for (const h of view.hands) for (const c of h.cards) s.add(`${view.id}:${c.i}`);
-    if (s.size > 400) seenRef.current = new Set([...s].filter((k) => k.startsWith(`${view.id}:`)));
-  }, [view]);
 
   const hands = view?.hands ?? [];
   const multi = hands.length > 1;
@@ -219,6 +202,7 @@ export function BlackjackTable({
   const dealerTone = view?.dealer.blackjack ? 'gold' : view && view.dealer.total > 21 ? 'bust' : 'default';
 
   return (
+    <DealtRegistry.Provider value={dealt}>
     <ShoeAnchor.Provider value={shoeAnchor}>
       <div
         ref={ref}
@@ -239,13 +223,13 @@ export function BlackjackTable({
                 <TotalPill
                   label="Dealer"
                   tone={dealerTone}
-                  total={view.dealer.blackjack ? 'BJ' : view.dealer.revealed ? formatTotal(view.dealer.total, view.dealer.soft && !settled) : formatTotal(view.dealer.total, view.dealer.soft)}
+                  total={view.dealer.blackjack ? 'BJ' : view.dealer.revealed ? formatTotal(view.dealer.total, view.dealer.soft && !settled) : view.dealer.total}
                 />
               ) : (
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/25">Dealer</span>
               )}
             </div>
-            {view ? <CardFan roundId={roundId} cards={view.dealer.cards} size={dealerSize} seen={seen} /> : null}
+            {view ? <CardFan roundId={roundId} cards={view.dealer.cards} size={dealerSize} /> : null}
           </div>
 
           {/* Middle: result / insurance note */}
@@ -279,7 +263,6 @@ export function BlackjackTable({
                     hand={h}
                     index={i}
                     size={playerSize}
-                    seen={seen}
                     active={i === view!.active && !settled}
                     multi={multi}
                     settled={settled}
@@ -295,6 +278,7 @@ export function BlackjackTable({
         <div className="relative z-20 border-t border-white/[0.06] bg-black/30 px-2.5 py-2.5 backdrop-blur-md sm:px-4">{actionBar}</div>
       </div>
     </ShoeAnchor.Provider>
+    </DealtRegistry.Provider>
   );
 }
 

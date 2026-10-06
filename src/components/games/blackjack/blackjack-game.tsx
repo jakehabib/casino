@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { GameShell, Stage } from '@/components/games/shared/game-shell';
 import { useHotkeys } from '@/components/ui/bet-controls';
 import { ErrorState } from '@/components/ui/states';
@@ -28,18 +28,11 @@ export default function BlackjackGame() {
   const bj = useBlackjack();
   const balance = useDisplayBalance();
   const config = bj.config;
-  const [bet, setBetRaw] = useState(1_000);
+  // Rendered client-only (dynamic, ssr: false), so storage is readable at init.
+  const [stored] = useState(readStoredBet);
+  const [rawBet, setBetRaw] = useState(stored ?? 1_000);
   const [chip, setChip] = useState(1_000);
-  const [fresh, setFresh] = useState(true);
-  const [instantId, setInstantId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = readStoredBet();
-    if (stored) {
-      setBetRaw(stored);
-      setFresh(false);
-    }
-  }, []);
+  const [fresh, setFresh] = useState(stored === null);
 
   const clamp = useCallback(
     (v: number) => (config ? Math.max(config.minBet, Math.min(config.maxBet, Math.floor(v))) : Math.floor(v)),
@@ -59,17 +52,8 @@ export default function BlackjackGame() {
     [clamp],
   );
 
-  // Keep the bet inside the live table limits.
-  useEffect(() => {
-    if (config && (bet < config.minBet || bet > config.maxBet)) setBetRaw(clamp(bet));
-  }, [config, bet, clamp]);
-
-  // Restored hand → render without deal animation.
-  useEffect(() => {
-    if (bj.view && instantId === null && !bj.revealing) setInstantId(bj.view.id);
-    // only the first presented round
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bj.view?.id]);
+  // Always inside the live table limits.
+  const bet = clamp(rawBet);
 
   const view = bj.view;
   const inRound = bj.inRound;
@@ -82,9 +66,7 @@ export default function BlackjackGame() {
   // A restricted account keeps the table (not the betting controls) while it
   // finishes a hand it had already started, including that hand's result.
   const [spectate, setSpectate] = useState(false);
-  useEffect(() => {
-    if (inRound) setSpectate(true);
-  }, [inRound]);
+  if (inRound && !spectate) setSpectate(true);
 
   const onDeal = useCallback(() => {
     if (!canDeal) return;
@@ -115,9 +97,9 @@ export default function BlackjackGame() {
     setFresh(true);
   }, [config]);
 
-  const legal = view && !bj.revealing ? view.legal : [];
-  const hotkeys = useMemo(
-    () => ({
+  const hotkeys = useMemo(() => {
+    const legal = view && !bj.revealing ? view.legal : [];
+    return {
       Space: inRound ? undefined : onDeal,
       h: legal.includes('HIT') ? () => bj.act('HIT') : undefined,
       s: legal.includes('STAND') ? () => bj.act('STAND') : undefined,
@@ -125,9 +107,8 @@ export default function BlackjackGame() {
       p: legal.includes('SPLIT') ? () => bj.act('SPLIT') : undefined,
       y: legal.includes('INSURANCE') ? () => bj.act('INSURANCE') : undefined,
       n: legal.includes('DECLINE_INSURANCE') ? () => bj.act('DECLINE_INSURANCE') : undefined,
-    }),
-    [inRound, legal, bj, onDeal],
-  );
+    };
+  }, [inRound, view, bj, onDeal]);
   useHotkeys(hotkeys, !!config);
 
   let stage: React.ReactNode;
@@ -151,7 +132,7 @@ export default function BlackjackGame() {
         bet={bet}
         canBet={!inRound && !busy}
         onBetSpot={() => onChip(chip)}
-        instantIds={instantId}
+        dealt={bj.dealt}
         actionBar={
           <ActionBar
             view={view}

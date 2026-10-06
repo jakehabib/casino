@@ -432,3 +432,37 @@ describe('Client option parity', () => {
     expect(Object.keys(server.EXCLUSION_OPTIONS).sort()).toEqual(client.EXCLUSION_LIST.map((o) => o.type).sort());
   });
 });
+
+describe('Account pages: history + ledger pagination (owner-only cursors)', () => {
+  it('pages GameHistory newest-first and refuses another user’s cursor', async () => {
+    const { listHistory, historyTotals } = await import('@/server/services/history/history-service');
+    const { listTransactions } = await import('@/server/services/wallet/wallet-service');
+    const a = await createTestUser();
+    const b = await createTestUser();
+    const base = Date.now() - 60_000;
+    for (let i = 0; i < 5; i++) {
+      await prisma.gameHistory.create({
+        data: { userId: a.id, game: i % 2 ? 'ROULETTE' : 'SLOTS', referenceId: rid(), wager: 100n, payout: BigInt(i * 50), net: BigInt(i * 50 - 100), resultSummary: `r${i}`, createdAt: new Date(base + i * 1000) },
+      });
+    }
+    await prisma.gameHistory.create({ data: { userId: b.id, game: 'ROULETTE', referenceId: rid(), wager: 1n, payout: 0n, net: -1n, resultSummary: 'b' } });
+
+    const p1 = await listHistory(a.id, { take: 2 });
+    expect(p1.items.map((r) => r.summary)).toEqual(['r4', 'r3']);
+    const p2 = await listHistory(a.id, { take: 2, cursor: p1.nextCursor! });
+    expect(p2.items.map((r) => r.summary)).toEqual(['r2', 'r1']);
+    const p3 = await listHistory(a.id, { take: 2, cursor: p2.nextCursor! });
+    expect(p3.items.map((r) => r.summary)).toEqual(['r0']);
+    expect(p3.nextCursor).toBeNull();
+    expect((await listHistory(a.id, { game: 'ROULETTE' })).items).toHaveLength(2);
+    expect(await historyTotals(a.id)).toEqual({ rounds: 5, wagered: 500, returned: 500, net: 0 });
+
+    // b cannot page through a's rows with a's cursor (and vice versa)
+    expect(await listHistory(b.id, { cursor: p1.nextCursor! })).toEqual({ items: [], nextCursor: null });
+    const aTx = await listTransactions(a.id);
+    expect(await listTransactions(b.id, { cursor: aTx.items[0].id })).toEqual({ items: [], nextCursor: null });
+    // type filter
+    expect((await listTransactions(a.id, { types: ['BET'] })).items).toHaveLength(0);
+    expect((await listTransactions(a.id, { types: ['SIGNUP_GRANT'] })).items).toHaveLength(1);
+  });
+});

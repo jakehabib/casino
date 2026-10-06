@@ -15,7 +15,7 @@ export function SlotPaytable({ def, theme, betLevel }: { def: PublicSlotDefiniti
   return (
     <div className="space-y-5 text-fg-muted">
       <div className="grid grid-cols-3 gap-2 text-center">
-        <Fact label="RTP" value={`${def.rtpTarget.toFixed(2)}%`} />
+        <Fact label="RTP" value={`${def.rtpSimulated.rtp.toFixed(2)}%`} />
         <Fact label="Volatility" value={def.volatility.replace('-', ' ')} />
         <Fact label="Max win" value={`${def.maxWinX.toLocaleString('en-US')}×`} />
       </div>

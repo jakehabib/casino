@@ -44,6 +44,7 @@ export function testDef(over: Partial<SlotDefinition>): SlotDefinition {
     scatterRules: { symbol: 'S', minCount: 3, pays: { 3: 500 }, freeSpins: { 3: 5 }, retrigger: { 3: 2 } },
     bonusRules: {},
     rtpTarget: 96,
+    rtpSimulated: { rtp: 96, rounds: 0 },
     volatility: 'medium',
     maxWinX: 1000,
     featureText: [],

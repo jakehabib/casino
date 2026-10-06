@@ -65,8 +65,8 @@ export function useBlackjack() {
   const [revealing, setRevealing] = useState(false);
   const [shoe, setShoe] = useState<ShoeInfo | null>(null);
   const [pending, setPending] = useState<null | 'DEAL' | BlackjackAction>(null);
-  const [lastBet, setLastBet] = useState<number | null>(null);
-  /** Card ids that should animate in from the shoe (others render in place). */
+  /** Cards already on the table ("<roundId>:<cardId>"); others are dealt from the shoe. */
+  const dealt = useRef(new Set<string>());
   const viewRef = useRef<RoundView | null>(null);
   const timers = useRef<number[]>([]);
   const restored = useRef(false);
@@ -81,6 +81,13 @@ export function useBlackjack() {
   const present = useCallback(
     (next: RoundView, opts: { instant?: boolean } = {}) => {
       clearTimers();
+      const reg = dealt.current;
+      if (reg.size > 300) for (const k of [...reg]) if (!k.startsWith(`${next.id}:`)) reg.delete(k);
+      if (opts.instant) {
+        // Restored state renders in place — nothing flies in from the shoe.
+        for (const c of next.dealer.cards) reg.add(`${next.id}:${c.i}`);
+        for (const h of next.hands) for (const c of h.cards) reg.add(`${next.id}:${c.i}`);
+      }
       const frames = buildFrames(viewRef.current, next, { instant: opts.instant || !!reduced });
       let at = 0;
       setRevealing(frames.length > 1);
@@ -111,10 +118,7 @@ export function useBlackjack() {
     restored.current = true;
     setShoe(active.data.shoe);
     useBalance.getState().set(active.data.balance);
-    if (active.data.game) {
-      setLastBet(active.data.game.baseBet);
-      present(active.data.game, { instant: true });
-    }
+    if (active.data.game) present(active.data.game, { instant: true });
   }, [active.data, present]);
 
   const apply = useCallback(
@@ -161,7 +165,6 @@ export function useBlackjack() {
       playSound('chipStack');
       try {
         const res = await postWithRetry<BlackjackResponse>('/api/games/blackjack/deal', { bet, requestId: rid });
-        setLastBet(bet);
         apply(res);
       } catch (err) {
         if (err instanceof ApiError && err.code === 'ROUND_IN_PROGRESS') {
@@ -225,7 +228,7 @@ export function useBlackjack() {
     view,
     revealing,
     pending,
-    lastBet,
+    dealt,
     deal,
     act,
     inRound: !!view && !view.settled,

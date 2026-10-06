@@ -69,6 +69,7 @@ export const overcharge: SlotDefinition = {
   cascadeRules: { multipliers: [1, 2, 3, 5, 10], persistInFreeSpins: true, maxCascades: 40 },
   bonusRules: {},
   rtpTarget: 96,
+  rtpSimulated: { rtp: 96.18, rounds: 5_000_000 },
   volatility: 'medium-high',
   maxWinX: 5000,
   featureText: [
