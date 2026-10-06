@@ -66,9 +66,9 @@ export const gildedVault: SlotDefinition = {
   },
   // hundredths of TOTAL bet, per line
   paytable: {
-    BAR: { 3: 23, 4: 65, 5: 230 },
+    BAR: { 3: 24, 4: 65, 5: 230 },
     BELL: { 3: 28, 4: 80, 5: 275 },
-    DIAMOND: { 3: 50, 4: 160, 5: 550 },
+    DIAMOND: { 3: 52, 4: 160, 5: 550 },
     SEVEN: { 3: 85, 4: 275, 5: 1100 },
     CROWN: { 3: 140, 4: 550, 5: 2300 },
   },
