@@ -23,7 +23,7 @@ const CSS = `
 @keyframes oc-flash { 0% { transform: scale(.5); opacity: 0; } 18% { opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
 @keyframes oc-spark { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-24px); opacity: 0; } }
 @keyframes oc-arc { 0% { stroke-dashoffset: 1; opacity: 1; } 25% { stroke-dashoffset: 0; opacity: 1; } 55% { opacity: .85; } 100% { stroke-dashoffset: 0; opacity: 0; } }
-@keyframes oc-streak { 0% { transform: translateY(-100%); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes oc-streak { 0% { transform: translateY(-100%); opacity: 0; } 20% { opacity: 1; } 75% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
 @keyframes oc-lock { 0%, 40% { opacity: 0; transform: scale(1.25); } 60% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
 @keyframes oc-flow { to { stroke-dashoffset: -24; } }
 @keyframes oc-trace-in { from { opacity: 0; } to { opacity: 1; } }
@@ -160,8 +160,8 @@ export const CascadeFx = memo(function CascadeFx({
       <defs>
         <linearGradient id="oc-streak-g" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={c} stopOpacity="0" />
-          <stop offset="0.7" stopColor={c} stopOpacity="0.22" />
-          <stop offset="1" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="0.75" stopColor={c} stopOpacity="0.1" />
+          <stop offset="1" stopColor={c} stopOpacity="0.38" />
         </linearGradient>
       </defs>
 
@@ -198,15 +198,10 @@ export const CascadeFx = memo(function CascadeFx({
                 <clipPath id={`oc-clip-${b.id}-${r}`}>
                   <rect x={r * 100} y={0} width={100} height={n * 100} />
                 </clipPath>
-                <rect
-                  x={r * 100 + 8}
-                  y={0}
-                  width={84}
-                  height={n * 100}
-                  rx="10"
-                  fill="url(#oc-streak-g)"
-                  style={{ animation: `oc-streak ${ms(520)} cubic-bezier(.3,0,.2,1) ${ms(240 + r * 35)} both` }}
-                />
+                <g style={{ animation: `oc-streak ${ms(480)} cubic-bezier(.3,0,.2,1) ${ms(200 + r * 35)} both` }}>
+                  <rect x={r * 100 + 22} y={0} width={56} height={n * 100} fill="url(#oc-streak-g)" />
+                  <rect x={r * 100 + 14} y={n * 100 - 3} width={72} height={3} rx="1.5" fill="#ffffff" opacity="0.85" />
+                </g>
               </g>
             ) : null,
           )}

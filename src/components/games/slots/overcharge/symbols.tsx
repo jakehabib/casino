@@ -232,18 +232,21 @@ function Chip() {
   );
 }
 
-const COIL_TURNS = Array.from({ length: 20 }, (_, i) => (i * 360) / 20);
+const COIL_TURNS = Array.from({ length: 30 }, (_, i) => (i * 360) / 30);
 function Coil() {
   return (
     <>
       <path d="M43 80 V93 M57 80 V93" stroke="url(#oc-metal)" strokeWidth="3.2" strokeLinecap="round" />
-      <circle cx="50" cy="48" r="35" fill="url(#oc-dark)" stroke={INK} strokeWidth="1.5" />
+      <circle cx="50" cy="48" r="35.5" fill={INK} />
+      {/* copper-wound toroid: a donut of wire with the turns etched across it */}
+      <circle cx="50" cy="48" r="24.5" fill="none" stroke="url(#oc-copper)" strokeWidth="21" />
       {COIL_TURNS.map((a) => (
-        <line key={a} x1="50" y1="14.5" x2="50" y2="34" stroke="url(#oc-copper)" strokeWidth="4.4" strokeLinecap="round" transform={`rotate(${a} 50 48)`} />
+        <line key={a} x1="50" y1="13.5" x2="50" y2="34.5" stroke="#4a1f08" strokeOpacity="0.75" strokeWidth="1.3" transform={`rotate(${a} 50 48)`} />
       ))}
-      <circle cx="50" cy="48" r="13" fill="#06080c" stroke="#00000099" strokeWidth="2" />
+      <circle cx="50" cy="48" r="35" fill="none" stroke={INK} strokeWidth="1.4" />
+      <circle cx="50" cy="48" r="14" fill="#06080c" stroke={INK} strokeWidth="1.4" />
       <circle cx="50" cy="48" r="8.5" fill="url(#oc-orb-COIL)" opacity="0.9" />
-      <path d="M24 34 A30 30 0 0 1 40 18.5" fill="none" stroke="#fff" strokeOpacity="0.4" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M24.5 33 A29.5 29.5 0 0 1 40 19.5" fill="none" stroke="#fff" strokeOpacity="0.5" strokeWidth="2.6" strokeLinecap="round" />
     </>
   );
 }

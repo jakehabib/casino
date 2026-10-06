@@ -89,7 +89,7 @@ function StarforgedStage({ m }: { m: SlotMachineController }) {
       );
   }
 
-  const maxReelHeight = 'min(max(280px, calc(100dvh - 500px)), 520px)';
+  const maxReelHeight = 'min(max(280px, calc(100dvh - 460px)), 540px)';
   const ratio = def.reels / def.rows;
 
   return (

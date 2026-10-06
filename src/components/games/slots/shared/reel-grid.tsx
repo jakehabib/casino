@@ -33,8 +33,9 @@ function fillerFor(def: PublicSlotDefinition, reel: number, count: number): stri
   const out: string[] = [];
   let x = (reel + 1) * 7919;
   for (let i = 0; i < count; i++) {
-    x = (x * 1103515245 + 12345) & 0x7fffffff;
-    out.push(pool[x % pool.length]);
+    // Math.imul keeps the LCG in 32-bit integer space (a float multiply loses the low bits).
+    x = (Math.imul(x, 1103515245) + 12345) >>> 0;
+    out.push(pool[(x >>> 8) % pool.length]);
   }
   return out;
 }

@@ -204,12 +204,14 @@ function BonusArt({ open, reduced }: { open: boolean; reduced: boolean }) {
           { rx: 34, ry: 12, from: 70, to: 60, d: 0.65, c: 'url(#sf-brass-h)' },
           { rx: 30, ry: 10, from: 20, to: -60, d: 0.8, c: '#9fe8ff' },
         ].map((r, i) => (
-          <motion.g key={i} style={{ originX: '50px', originY: '50px' }} initial={{ rotate: r.from }} animate={{ rotate: open ? r.to : r.from }} transition={t(r.d)}>
+          <motion.g key={i} initial={{ rotate: r.from }} animate={{ rotate: open ? r.to : r.from }} transition={t(r.d)}>
+            {/* invisible bound keeps the group's box centred on the pivot */}
+            <circle cx="50" cy="50" r={r.rx + 4} fill="none" />
             <ellipse cx="50" cy="50" rx={r.rx} ry={r.ry} fill="none" stroke={r.c} strokeWidth={i === 2 ? 1.4 : 2.6} />
             <circle cx={50 + r.rx} cy="50" r={i === 2 ? 2.2 : 3.2} fill={i === 2 ? '#c9fff6' : 'url(#sf-brass)'} />
           </motion.g>
         ))}
-        <motion.g style={{ originX: '50px', originY: '50px' }} initial={{ scale: 0.35, opacity: 0.6 }} animate={{ scale: open ? 1 : 0.35, opacity: 1 }} transition={t(1.1)}>
+        <motion.g initial={{ scale: 0.35, opacity: 0.6 }} animate={{ scale: open ? 1 : 0.35, opacity: 1 }} transition={t(1.1)}>
           <circle cx="50" cy="50" r="16" fill="url(#sf-nova)" />
           <path d={starPath(50, 50, 4, 14, 3)} fill="#ffffff" />
         </motion.g>

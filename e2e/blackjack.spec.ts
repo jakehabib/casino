@@ -3,7 +3,7 @@ import { test, expect, balanceOf, expectHeaderBalance } from './fixtures';
 test('Play Blackjack: deal, stand and win against a dealer bust (forced shoe)', async ({ page, context, player, dev }) => {
   void player;
   // Deal order: player, dealer, player, dealer(hole), then draws.
-  // Player T+Q = 20, dealer 9+7 = 16 → stands... dealer must hit 16 → K busts.
+  // Player T+Q = 20 (stands), dealer 9+7 = 16 must hit → K busts.
   await dev.force('blackjack', { cards: ['TS', '9H', 'QH', '7D', 'KC'] });
   const before = await balanceOf(context.request);
 

@@ -1,4 +1,4 @@
-import { test as base, expect, type APIRequestContext, type BrowserContext, type Page } from '@playwright/test';
+import { test as base, expect, type APIRequestContext, type Page } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 
 /**
@@ -59,7 +59,7 @@ export function rid(prefix = 'e2e') {
 }
 
 /** Register a fresh account and sign the given context in as it. */
-export async function registerViaApi(context: BrowserContext, baseURL: string, prefix = 'e2e'): Promise<Player> {
+export async function registerViaApi(context: { request: APIRequestContext }, baseURL: string, prefix = 'e2e'): Promise<Player> {
   const username = uniqueName(prefix);
   const email = `${username}@e2e.nova.test`;
   const res = await apiPost<{ ok: boolean; userId: string }>(context.request, baseURL, '/api/auth/register', {
@@ -109,6 +109,20 @@ type Fixtures = {
 export const test = base.extend<Fixtures>({
   reducedMotion: async ({}, use) => use('reduce'),
   extraHTTPHeaders: async ({}, use) => use({ 'X-Forwarded-For': fakeIp() }),
+  // The Next.js dev-tools indicator (dev server only) floats over the bottom-left
+  // corner and intercepts taps on the mobile "Menu" button. Hide it for tests.
+  context: async ({ context }, use) => {
+    await context.addInitScript(() => {
+      const hide = () => {
+        const st = document.createElement('style');
+        st.textContent = 'nextjs-portal{display:none!important}';
+        document.head.appendChild(st);
+      };
+      if (document.head) hide();
+      else document.addEventListener('DOMContentLoaded', hide, { once: true });
+    });
+    await use(context);
+  },
   player: async ({ context, baseURL }, use) => {
     await use(await registerViaApi(context, baseURL!));
   },

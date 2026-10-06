@@ -96,7 +96,7 @@ export function ClusterOverlay({ wins, reels, rows, reduced }: { wins: SpinWin[]
                 d={d}
                 fill="none"
                 stroke={color}
-                strokeWidth={2.4}
+                strokeWidth={3}
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
                 initial={reduced ? false : { pathLength: 0 }}
@@ -118,7 +118,6 @@ export function ClusterOverlay({ wins, reels, rows, reduced }: { wins: SpinWin[]
                   vectorEffect="non-scaling-stroke"
                   initial={reduced ? false : { scale: 0.6, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  style={{ originX: `${r * U + U / 2}px`, originY: `${y * U + U / 2}px` }}
                   transition={{ type: 'spring', stiffness: 380, damping: 20, delay: k * 0.05 }}
                 />
               ))}
@@ -170,15 +169,15 @@ export function OrreryGlyph({ spin = false, reduced = false }: { spin?: boolean;
   return (
     <>
       <circle cx="50" cy="50" r="9" fill="url(#sf-brass)" stroke="#4d3411" strokeWidth="1" />
-      <motion.g style={{ originX: '50px', originY: '50px' }} {...turn(1.1)}>
+      <motion.g {...turn(1.1)}>
         <circle cx="50" cy="50" r="22" fill="none" stroke="#d9b46a" strokeWidth="1.6" />
         <circle cx="72" cy="50" r="4" fill="#9fe8ff" />
       </motion.g>
-      <motion.g style={{ originX: '50px', originY: '50px' }} {...turn(1.4, -1)}>
+      <motion.g {...turn(1.4, -1)}>
         <circle cx="50" cy="50" r="34" fill="none" stroke="#d9b46a" strokeOpacity="0.7" strokeWidth="1.2" strokeDasharray="2 3" />
         <circle cx="50" cy="16" r="5" fill="url(#sf-brass)" stroke="#4d3411" strokeWidth="0.8" />
       </motion.g>
-      <motion.g style={{ originX: '50px', originY: '50px' }} {...turn(1.7)}>
+      <motion.g {...turn(1.7)}>
         <circle cx="50" cy="50" r="44" fill="none" stroke="#d9b46a" strokeOpacity="0.5" strokeWidth="0.8" />
         <circle cx="19" cy="81" r="3" fill="#f59ab5" />
       </motion.g>
@@ -210,7 +209,7 @@ export function ModifierReveal({ modifier, reduced }: { modifier: SpinModifier |
               <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full overflow-visible">
                 <circle cx="50" cy="50" r="60" fill="url(#sf-nova)" opacity="0.55" />
                 <motion.g
-                  style={{ originX: '50px', originY: '50px' }}
+                 
                   initial={{ rotate: -90 }}
                   animate={{ rotate: 0 }}
                   transition={{ duration: reduced ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
@@ -303,7 +302,6 @@ export function TransformFx({ transform, reels, rows, reduced, turbo }: { transf
                       fill="#ffffff"
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: [0, 1.1, 0], opacity: [0, 1, 0] }}
-                      style={{ originX: `${x}px`, originY: `${y}px` }}
                       transition={{ duration: 0.45 * k, delay: (0.3 + i * 0.035) * k }}
                     />
                   </g>
@@ -323,7 +321,6 @@ export function TransformFx({ transform, reels, rows, reduced, turbo }: { transf
                       stroke="#f1dca4"
                       strokeWidth={3}
                       vectorEffect="non-scaling-stroke"
-                      style={{ originX: `${x}px`, originY: `${y}px` }}
                       initial={{ scale: 2.4, opacity: 0 }}
                       animate={{ scale: [2.4, 1, 1.15], opacity: [0, 1, 0] }}
                       transition={{ duration: 0.6 * k, delay: i * 0.09 * k, times: [0, 0.55, 1] }}
@@ -336,7 +333,7 @@ export function TransformFx({ transform, reels, rows, reduced, turbo }: { transf
                       fill="url(#sf-brass-h)"
                       initial={{ scaleY: 0, opacity: 0 }}
                       animate={{ scaleY: [0, 1, 1], opacity: [0, 0.9, 0] }}
-                      style={{ originX: `${x}px`, originY: `${y}px` }}
+                      style={{ originY: 1 }}
                       transition={{ duration: 0.5 * k, delay: i * 0.09 * k }}
                     />
                   </g>
@@ -353,7 +350,17 @@ export function TransformFx({ transform, reels, rows, reduced, turbo }: { transf
                 const y1 = Math.min(rows - 1, oy + 1);
                 return (
                   <g>
-                    <motion.circle cx={x} cy={y} r={60} fill="url(#sf-nova)" style={{ originX: `${x}px`, originY: `${y}px` }} initial={{ scale: 0.2, opacity: 1 }} animate={{ scale: 3.2, opacity: 0 }} transition={{ duration: 0.7 * k, ease: 'easeOut' }} />
+                    <motion.rect
+                      x={r0 * U}
+                      y={y0 * U}
+                      width={(r1 - r0 + 1) * U}
+                      height={(y1 - y0 + 1) * U}
+                      fill="#e9fbf8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 0.6, 0] }}
+                      transition={{ duration: 0.55 * k, times: [0, 0.25, 1] }}
+                    />
+                    <motion.circle cx={x} cy={y} r={95} fill="url(#sf-nova)" initial={{ scale: 0.25, opacity: 1 }} animate={{ scale: 2.4, opacity: 0 }} transition={{ duration: 0.75 * k, ease: 'easeOut' }} />
                     {[0, 0.12].map((d) => (
                       <motion.circle
                         key={d}
@@ -362,9 +369,8 @@ export function TransformFx({ transform, reels, rows, reduced, turbo }: { transf
                         r={40}
                         fill="none"
                         stroke="#e9fbf8"
-                        strokeWidth={3}
+                        strokeWidth={5}
                         vectorEffect="non-scaling-stroke"
-                        style={{ originX: `${x}px`, originY: `${y}px` }}
                         initial={{ scale: 0.3, opacity: 1 }}
                         animate={{ scale: 4.2, opacity: 0 }}
                         transition={{ duration: 0.75 * k, delay: d * k, ease: [0.2, 0.7, 0.3, 1] }}

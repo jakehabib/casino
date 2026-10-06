@@ -44,6 +44,11 @@ function useChainLevel(m: SlotMachineController, top: number, persist: boolean) 
     prevPhase.current = m.phase;
     if (m.phase === 'spinning' && was !== 'spinning') setLevel(persist && m.bonus ? Math.min(m.bonus.cascadeLevel, top) : 0);
     else if (m.phase === 'idle' && m.bonus && persist) setLevel(Math.min(m.bonus.cascadeLevel, top));
+    else if (m.phase === 'idle' && !m.bonus && was !== 'idle') {
+      // Base game: let the reached level read for a beat, then discharge (the next paid spin starts at 1×).
+      const t = setTimeout(() => setLevel(0), 1600);
+      return () => clearTimeout(t);
+    }
   }, [m.phase, m.bonus, persist, top]);
 
   useEffect(() => {

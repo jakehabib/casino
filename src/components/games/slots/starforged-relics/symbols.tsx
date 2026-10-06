@@ -374,6 +374,11 @@ function Supernova({ plain }: { plain?: boolean }) {
   return (
     <>
       <circle cx="50" cy="50" r="48" fill="url(#sf-nova)" />
+      {/* brass bezel so the star reads as a symbol, not a sparkle */}
+      <circle cx="50" cy="50" r="40" fill="#06272a" fillOpacity="0.55" stroke="url(#sf-brass)" strokeWidth="2.6" />
+      {[0, 90, 180, 270].map((r) => (
+        <path key={r} d="M50 6 L54 12 L50 15 L46 12 Z" fill="url(#sf-brass)" stroke="#4d3411" strokeWidth="0.6" transform={`rotate(${r} 50 50)`} />
+      ))}
       {Array.from({ length: 16 }).map((_, i) => {
         const a = (i * Math.PI) / 8;
         const long = i % 2 === 0;
