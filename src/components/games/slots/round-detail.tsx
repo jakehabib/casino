@@ -32,11 +32,11 @@ export function SlotRoundDetail({ detail }: { detail: RoundDetail<SlotRoundData>
   const symIndex = new Map(def.symbols.map((s, i) => [s.id, i]));
   const symbols = def.symbols;
   // Every free spin has its own nonce (and bonus state), so each gets its own verifier link.
-  // The revealed server seed applies to spins made with the same seed pair as the trigger.
+  // A spin's server seed is included once its seed pair has been rotated (revealed).
   const verifyFor = (s: SlotRoundData['spins'][number]) =>
     verifyHref({
       game: 'slots',
-      serverSeed: detail.fairness && detail.fairness.serverSeedHash === s.serverSeedHash ? (detail.fairness.serverSeed ?? undefined) : undefined,
+      serverSeed: s.serverSeed ?? (detail.fairness?.serverSeedHash === s.serverSeedHash ? (detail.fairness.serverSeed ?? undefined) : undefined),
       seedHash: s.serverSeedHash,
       clientSeed: s.clientSeed,
       nonce: String(s.nonce),

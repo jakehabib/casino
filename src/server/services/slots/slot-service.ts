@@ -109,6 +109,8 @@ export interface SlotRoundData {
     isFreeSpin: boolean;
     nonce: number;
     serverSeedHash: string;
+    /** Revealed server seed of this spin's seed pair (null until rotated). */
+    serverSeed: string | null;
     clientSeed: string;
     bonusStateBefore: BonusState | null;
     payout: number;
@@ -397,6 +399,13 @@ export async function getSlotRoundDetail(userId: string, id: string): Promise<Ro
   const payout = spins.reduce((a, s) => a + s.payout, 0n);
   const freeSpins = spins.filter((s) => s.isFreeSpin).length;
   const fairness = await fairnessInfo(userId, trigger.serverSeedHash, trigger.clientSeed, trigger.nonce);
+  // A seed rotation mid-bonus splits a round across seed pairs: reveal each one that is revealed.
+  const hashes = [...new Set(spins.map((s) => s.serverSeedHash))];
+  const revealed = new Map(
+    (await prisma.serverSeed.findMany({ where: { userId, seedHash: { in: hashes }, status: 'REVEALED' }, select: { seedHash: true, seed: true } })).map(
+      (x) => [x.seedHash, x.seed] as const,
+    ),
+  );
   return {
     game: 'SLOTS',
     id: roundId,
@@ -422,6 +431,7 @@ export async function getSlotRoundDetail(userId: string, id: string): Promise<Ro
           isFreeSpin: s.isFreeSpin,
           nonce: s.nonce,
           serverSeedHash: s.serverSeedHash,
+          serverSeed: revealed.get(s.serverSeedHash) ?? null,
           clientSeed: s.clientSeed,
           bonusStateBefore: st.bonusStateBefore ?? null,
           payout: toNum(s.payout),

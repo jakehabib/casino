@@ -141,6 +141,7 @@
   html {
     background: var(--color-bg);
     -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
     text-rendering: optimizeLegibility;
   }
   body {
@@ -151,6 +152,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
+    /* clip (not hidden) so sticky headers/sidebars keep working */
+    overflow-x: clip;
   }
   ::selection {
     background: #7c5cff55;
