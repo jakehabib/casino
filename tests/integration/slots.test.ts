@@ -130,6 +130,24 @@ describe('Slots — free spins', () => {
     expect(detail.fairness?.extra).toMatchObject({ slotId: 'gilded-vault', betLevel: 500, bonusStateBefore: null });
   });
 
+  it("a 'free' click from a stale window never becomes a paid spin", async () => {
+    const u = await createTestUser();
+    const before = await balanceOf(u.id);
+    await expect(spinSlot(u.id, 'gilded-vault', { betLevel: 500, requestId: rid(), mode: 'free' })).rejects.toMatchObject({
+      code: 'CONFLICT',
+      details: { bonusEnded: true },
+    });
+    expect(await balanceOf(u.id)).toBe(before);
+    expect(await prisma.slotSpin.count({ where: { userId: u.id } })).toBe(0);
+
+    // during a bonus, either mode plays the free spin (no charge)
+    await forceFreeSpins(u.id);
+    await spinSlot(u.id, 'gilded-vault', { betLevel: 500, requestId: rid(), mode: 'paid' });
+    const free = await spinSlot(u.id, 'gilded-vault', { betLevel: 500, requestId: rid(), mode: 'free' });
+    const paidClick = await spinSlot(u.id, 'gilded-vault', { betLevel: 500, requestId: rid(), mode: 'paid' });
+    expect([free.spin.isFreeSpin, free.spin.bet, paidClick.spin.isFreeSpin, paidClick.spin.bet]).toEqual([true, 0, true, 0]);
+  });
+
   it('a cooldown blocks free spins but preserves the bonus state', async () => {
     const u = await createTestUser();
     await forceFreeSpins(u.id, 'overcharge');
