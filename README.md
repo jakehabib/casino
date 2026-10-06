@@ -64,6 +64,7 @@ speed up the crash countdown and reset responsible-play state.
 | `ENABLE_DEV_TOOLS` | Enables `/dev` + forced outcomes. Ignored (always off) when `NODE_ENV=production` |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_USERNAME` | Optional: create a SUPER_ADMIN owner account when seeding (e.g. first deploy) |
 | `SEED_DEMO_USERS` | `true` to create the demo accounts in production |
+| `TRUST_PROXY` | `true` when behind one reverse proxy (Railway, Render, nginx) so rate limits use the real client IP |
 | `LOG_LEVEL`, `PORT` | Logging level, port |
 
 ## Deploying to Railway
@@ -74,7 +75,7 @@ owner account if `ADMIN_EMAIL`/`ADMIN_PASSWORD` are set) and starts the server.
 1. New Project → **Deploy from GitHub repo** → pick this repository/branch.
 2. **+ New → Database → PostgreSQL** and **+ New → Database → Redis**.
 3. On the app service → **Variables**: `DATABASE_URL=${{Postgres.DATABASE_URL}}`,
-   `REDIS_URL=${{Redis.REDIS_URL}}`, `AUTH_SECRET=<long random string>`, `NODE_ENV=production`,
+   `REDIS_URL=${{Redis.REDIS_URL}}`, `AUTH_SECRET=<long random string>`, `NODE_ENV=production`, `TRUST_PROXY=true`,
    `ADMIN_EMAIL`, `ADMIN_PASSWORD` (and optionally `SEED_DEMO_USERS=true`).
 4. **Settings → Networking → Generate Domain**, then set `APP_URL=https://<that domain>` and redeploy.
 
@@ -103,9 +104,26 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Framer Mo
 Zustand · Radix primitives · PostgreSQL + Prisma 6 · Redis (ioredis) · Socket.IO · Zod 4 · Argon2id ·
 pino · Vitest + Testing Library · Playwright · Docker.
 
+## Quality status
+
+* 578 Vitest tests (unit, component, integration against PostgreSQL) and 23 Playwright end-to-end tests
+  cover every required flow; `tsc` and `next build` are clean.
+* A dedicated adversarial QA pass covered every game (payouts vs ledger, duplicate/concurrent requests,
+  refresh/reconnect, limits and breaks), realtime (multi-user crash races, chat moderation), and security
+  (CSRF, authorization, XSS, secret leakage, rate limits). Bugs found were fixed with regression tests.
+
 ## Known limitations
 
-See the bottom of this file after the QA pass for the current list. Highlights by design:
-no real-money features of any kind; avatars are generated presets (no uploads); password-reset emails are
-printed to the server console in development (plug a mailer into `requestPasswordReset` for production);
-single global chat room; Socket.IO cross-node broadcasting needs the Redis adapter when scaling past one node.
+* No real-money features of any kind (by design).
+* Avatars are generated presets (no uploads). Password-reset emails are printed to the server console in
+  development — plug a mailer into `requestPasswordReset` for production.
+* Single global chat room; chat keeps the latest 50 messages on join (no "load older"). The blocked-word
+  list is a code file, not an admin setting.
+* Slot free spins play automatically once started. Phone landscape places the slot reels below the fold.
+* Double/Split/Insurance buttons stay visible when they would be rejected (the server rejects them with a
+  friendly message). Baccarat allows betting Player and Banker together.
+* Responsible-play unlock times display in the browser's timezone (not labelled with the RP timezone).
+* Scaling Socket.IO past one node needs `@socket.io/redis-adapter`; presence and crash already coordinate
+  through Redis.
+* Docker image build was validated step-by-step (install, prisma generate, production build, production
+  start); a full `docker build` could not be run in the authoring environment due to registry rate limits.
