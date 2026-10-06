@@ -222,7 +222,7 @@ export function AdminUsersList() {
                           }
                           className="cursor-pointer outline-none transition-colors hover:bg-surface-2/60 focus-visible:bg-surface-2"
                         >
-                          <Td className="max-w-[280px]">
+                          <Td className="max-w-[240px]">
                             <div className="flex items-center gap-2.5">
                               <Avatar
                                 avatarUrl={u.avatarUrl}

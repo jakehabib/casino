@@ -19,10 +19,10 @@ const loading = () => (
   </div>
 );
 
-const Interim = dynamic(() => import('./shared/interim-machine'), { loading });
+const Interim = dynamic(() => import('./shared/interim-machine'), { loading, ssr: false });
 
 export const SLOT_UIS: Record<string, ComponentType> = {
-  'gilded-vault': dynamic(() => import('./gilded-vault/gilded-vault-machine'), { loading }),
+  'gilded-vault': dynamic(() => import('./gilded-vault/gilded-vault-machine'), { loading, ssr: false }),
   overcharge: function OverchargeInterim() {
     return <Interim slotId="overcharge" />;
   },
