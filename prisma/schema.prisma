@@ -1,0 +1,815 @@
+// NOVA — play-money social casino
+// All credit amounts are stored as BigInt integer Credits. Never floats.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Identity
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ProfilePrivacy {
+  PUBLIC
+  LIMITED
+  PRIVATE
+}
+
+model User {
+  id           String         @id @default(cuid())
+  username     String         @unique // lowercase canonical handle
+  displayName  String
+  email        String         @unique
+  passwordHash String?
+  avatarUrl    String? // preset avatar key ("preset:<n>") or URL
+  role         Role           @default(USER)
+  status       UserStatus     @default(ACTIVE)
+  statusReason String?
+  suspendedUntil DateTime?
+  privacy      ProfilePrivacy @default(PUBLIC)
+  // Individually hideable performance-sensitive stats
+  hideNetResult      Boolean @default(false)
+  hideTotalWagered   Boolean @default(false)
+  hideTotalWon       Boolean @default(false)
+  hideLargestWin     Boolean @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  lastSeenAt   DateTime       @default(now())
+  // Progression (denormalised mirror of PlayerLevel for fast reads)
+  xp           BigInt         @default(0)
+  level        Int            @default(1)
+  lifetimeXp   BigInt         @default(0)
+
+  accounts            Account[]
+  sessions            Session[]
+  passwordResets      PasswordResetToken[]
+  wallet              Wallet?
+  transactions        WalletTransaction[]
+  stats               PlayerStats?
+  playerLevel         PlayerLevel?
+  blackjackGames      BlackjackGame[]
+  baccaratGames       BaccaratGame[]
+  rouletteRounds      RouletteRound[]
+  crashBets           CrashBet[]
+  slotGames           SlotGame[]
+  slotSpins           SlotSpin[]
+  serverSeeds         ServerSeed[]
+  shoes               CardShoe[]
+  rewardClaims        RewardClaim[]
+  chatMessages        ChatMessage[]
+  chatMutes           ChatMute[]            @relation("MutedUser")
+  chatBans            ChatBan[]             @relation("BannedUser")
+  chatReports         ChatReport[]          @relation("Reporter")
+  blocks              UserBlock[]           @relation("Blocker")
+  blockedBy           UserBlock[]           @relation("Blocked")
+  moderationActions   ModerationLog[]       @relation("Moderator")
+  moderationTargets   ModerationLog[]       @relation("ModerationTarget")
+  rpSettings          ResponsiblePlaySettings?
+  rpLimitChanges      ResponsiblePlayLimitChange[]
+  selfExclusions      SelfExclusion[]
+  dailyAggregates     DailyPlayAggregate[]
+  notifications       Notification[]
+  adminAuditLogs      AdminAuditLog[]       @relation("AuditAdmin")
+  favorites           FavoriteGame[]
+  gameHistory         GameHistory[]
+
+  @@index([createdAt])
+  @@index([lastSeenAt])
+}
+
+/// OAuth-ready provider accounts (Auth.js compatible shape)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// Server-side sessions. Only the SHA-256 hash of the cookie token is stored.
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  ip         String?
+  userAgent  String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Wallet — append-only ledger. Wallet.balance is a cached projection
+// that is only ever mutated in the same DB transaction that appends a
+// WalletTransaction row (see src/server/services/wallet).
+// ─────────────────────────────────────────────────────────────
+
+enum TransactionType {
+  SIGNUP_GRANT
+  FREE_CREDIT_CLAIM
+  BET
+  WIN
+  REFUND
+  ADMIN_ADJUSTMENT
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   BigInt   @default(0)
+  version   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WalletTransaction {
+  id             String          @id @default(cuid())
+  userId         String
+  type           TransactionType
+  amount         BigInt // signed: negative for debits
+  balanceBefore  BigInt
+  balanceAfter   BigInt
+  referenceType  String // e.g. BLACKJACK_GAME, CRASH_BET, REWARD_CLAIM
+  referenceId    String
+  idempotencyKey String
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([referenceType, referenceId])
+  @@index([type, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Progression & stats
+// ─────────────────────────────────────────────────────────────
+
+model PlayerLevel {
+  userId     String   @id
+  xp         BigInt   @default(0) // XP inside current level
+  level      Int      @default(1)
+  lifetimeXp BigInt   @default(0)
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlayerStats {
+  userId          String   @id
+  gamesPlayed     Int      @default(0)
+  totalWagered    BigInt   @default(0)
+  totalWon        BigInt   @default(0)
+  largestWin      BigInt   @default(0)
+  largestWinGame  String?
+  // per-game play counters, used to derive favourite game
+  playsBlackjack  Int      @default(0)
+  playsBaccarat   Int      @default(0)
+  playsRoulette   Int      @default(0)
+  playsCrash      Int      @default(0)
+  playsSlots      Int      @default(0)
+  // Blackjack
+  bjHands         Int      @default(0)
+  bjWins          Int      @default(0)
+  bjLosses        Int      @default(0)
+  bjPushes        Int      @default(0)
+  bjBlackjacks    Int      @default(0)
+  bjLargestBlackjackWin BigInt @default(0)
+  // Baccarat
+  bacHands        Int      @default(0)
+  bacPlayerWins   Int      @default(0)
+  bacBankerWins   Int      @default(0)
+  bacTies         Int      @default(0)
+  // Roulette
+  rouSpins        Int      @default(0)
+  rouLargestWin   BigInt   @default(0)
+  // Crash
+  crashRounds     Int      @default(0)
+  crashHighestCashout Int  @default(0) // multiplier * 100
+  crashLargestWin BigInt   @default(0)
+  // Slots
+  slotSpins       Int      @default(0)
+  slotLargestWin  BigInt   @default(0)
+  slotSpinsBySlot Json     @default("{}") // { [slotId]: count }
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FavoriteGame {
+  userId    String
+  gameId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, gameId])
+}
+
+/// Unified, denormalised history row written at settlement for every game.
+/// Powers /history, recent games, lobby "recently played" and profiles.
+model GameHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  game          String // BLACKJACK | BACCARAT | ROULETTE | CRASH | SLOTS
+  gameVariant   String? // slot id
+  referenceId   String // id of the game record
+  wager         BigInt
+  payout        BigInt
+  net           BigInt
+  multiplier    Int?     // x100
+  resultSummary String
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([game, referenceId])
+  @@index([userId, game, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Provable fairness
+// ─────────────────────────────────────────────────────────────
+
+enum SeedStatus {
+  ACTIVE
+  REVEALED
+}
+
+model ServerSeed {
+  id         String     @id @default(cuid())
+  userId     String
+  seed       String // secret until REVEALED. Never sent to clients while ACTIVE.
+  seedHash   String
+  clientSeed String
+  nonce      Int        @default(0) // next nonce to be used
+  status     SeedStatus @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+  revealedAt DateTime?
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([seedHash])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Card shoes (Blackjack / Baccarat) — server-only card order.
+// ─────────────────────────────────────────────────────────────
+
+enum ShoeStatus {
+  ACTIVE
+  RETIRED
+}
+
+model CardShoe {
+  id           String     @id @default(cuid())
+  userId       String
+  game         String // BLACKJACK | BACCARAT
+  decks        Int
+  cards        Json // full ordered card list (never exposed until retired + seed revealed)
+  position     Int        @default(0)
+  cutCard      Int // reshuffle once position >= cutCard (between rounds)
+  serverSeedId String
+  nonce        Int
+  status       ShoeStatus @default(ACTIVE)
+  roundsDealt  Int        @default(0)
+  createdAt    DateTime   @default(now())
+  retiredAt    DateTime?
+  version      Int        @default(0)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, game, status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Blackjack
+// ─────────────────────────────────────────────────────────────
+
+enum BlackjackStatus {
+  INSURANCE_OFFERED
+  PLAYER_TURN
+  DEALER_TURN
+  SETTLED
+}
+
+model BlackjackGame {
+  id              String          @id @default(cuid())
+  userId          String
+  clientRequestId String
+  shoeId          String
+  status          BlackjackStatus
+  baseBet         BigInt
+  totalWagered    BigInt          @default(0)
+  totalPayout     BigInt          @default(0)
+  insuranceBet    BigInt          @default(0)
+  insurancePayout BigInt          @default(0)
+  dealerCards     Json
+  activeHand      Int             @default(0)
+  rules           Json
+  state           Json // full engine state (server only; sanitised before sending)
+  version         Int             @default(0)
+  result          String?
+  serverSeedHash  String
+  clientSeed      String
+  nonce           Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  settledAt       DateTime?
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hands           BlackjackHand[]
+  actions         BlackjackAction[]
+
+  @@unique([userId, clientRequestId])
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model BlackjackHand {
+  id        String        @id @default(cuid())
+  gameId    String
+  index     Int
+  cards     Json
+  bet       BigInt
+  doubled   Boolean       @default(false)
+  fromSplit Boolean       @default(false)
+  outcome   String? // WIN | LOSS | PUSH | BLACKJACK | BUST
+  payout    BigInt        @default(0)
+  game      BlackjackGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, index])
+}
+
+model BlackjackAction {
+  id        String        @id @default(cuid())
+  gameId    String
+  seq       Int
+  action    String
+  handIndex Int
+  card      Json?
+  requestId String?
+  createdAt DateTime      @default(now())
+  game      BlackjackGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, seq])
+  @@unique([gameId, requestId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Baccarat
+// ─────────────────────────────────────────────────────────────
+
+model BaccaratGame {
+  id              String        @id @default(cuid())
+  userId          String
+  clientRequestId String
+  shoeId          String
+  shoeRound       Int
+  playerCards     Json
+  bankerCards     Json
+  playerTotal     Int
+  bankerTotal     Int
+  outcome         String // PLAYER | BANKER | TIE
+  natural         Boolean       @default(false)
+  totalWagered    BigInt
+  totalPayout     BigInt
+  rules           Json
+  serverSeedHash  String
+  clientSeed      String
+  nonce           Int
+  createdAt       DateTime      @default(now())
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bets            BaccaratBet[]
+
+  @@unique([userId, clientRequestId])
+  @@index([userId, createdAt])
+  @@index([shoeId, shoeRound])
+}
+
+model BaccaratBet {
+  id      String       @id @default(cuid())
+  gameId  String
+  type    String // PLAYER | BANKER | TIE | (future: PLAYER_PAIR ...)
+  amount  BigInt
+  payout  BigInt       @default(0)
+  outcome String // WIN | LOSS | PUSH
+  game    BaccaratGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Roulette
+// ─────────────────────────────────────────────────────────────
+
+model RouletteRound {
+  id              String        @id @default(cuid())
+  userId          String
+  clientRequestId String
+  winningNumber   Int
+  totalWagered    BigInt
+  totalPayout     BigInt
+  serverSeedHash  String
+  clientSeed      String
+  nonce           Int
+  createdAt       DateTime      @default(now())
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bets            RouletteBet[]
+
+  @@unique([userId, clientRequestId])
+  @@index([userId, createdAt])
+}
+
+model RouletteBet {
+  id      String        @id @default(cuid())
+  roundId String
+  type    String // STRAIGHT | SPLIT | STREET | CORNER | SIX_LINE | RED | BLACK | ODD | EVEN | LOW | HIGH | DOZEN | COLUMN
+  numbers Int[]
+  amount  BigInt
+  payout  BigInt        @default(0)
+  won     Boolean       @default(false)
+  round   RouletteRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@index([roundId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Crash (multiplayer)
+// ─────────────────────────────────────────────────────────────
+
+enum CrashRoundStatus {
+  WAITING
+  BETTING_LOCKED
+  RUNNING
+  CRASHED
+  SETTLED
+}
+
+model CrashRound {
+  id          String           @id @default(cuid())
+  roundNumber Int              @unique @default(autoincrement())
+  status      CrashRoundStatus
+  seedHash    String
+  seed        String // secret until CRASHED; never sent to clients before
+  salt        String
+  crashPoint  Int // multiplier * 100
+  bettingEndsAt DateTime
+  startedAt   DateTime?
+  crashedAt   DateTime?
+  settledAt   DateTime?
+  createdAt   DateTime         @default(now())
+  bets        CrashBet[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum CrashBetStatus {
+  ACTIVE
+  CASHED_OUT
+  LOST
+  REFUNDED
+}
+
+model CrashBet {
+  id              String         @id @default(cuid())
+  roundId         String
+  userId          String
+  slot            Int // 0 = Bet A, 1 = Bet B
+  amount          BigInt
+  autoCashout     Int? // multiplier * 100
+  cashoutAt       Int? // multiplier * 100
+  payout          BigInt         @default(0)
+  status          CrashBetStatus @default(ACTIVE)
+  clientRequestId String
+  createdAt       DateTime       @default(now())
+  settledAt       DateTime?
+  round           CrashRound     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roundId, userId, slot])
+  @@unique([userId, clientRequestId])
+  @@index([userId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Slots
+// ─────────────────────────────────────────────────────────────
+
+/// Persistent per-user, per-slot bonus state (free spins etc.)
+model SlotGame {
+  id          String   @id @default(cuid())
+  userId      String
+  slotId      String
+  bonusState  Json? // null when in base game
+  version     Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slotId])
+}
+
+model SlotSpin {
+  id              String   @id @default(cuid())
+  userId          String
+  slotId          String
+  clientRequestId String
+  bet             BigInt // charged amount (0 for free spins)
+  betLevel        BigInt // stake level used to compute wins
+  payout          BigInt
+  isFreeSpin      Boolean  @default(false)
+  outcome         Json // full SlotEngine outcome (grids, wins, cascades, features)
+  serverSeedHash  String
+  clientSeed      String
+  nonce           Int
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientRequestId])
+  @@index([userId, slotId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Rewards
+// ─────────────────────────────────────────────────────────────
+
+model RewardClaim {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // DAILY | REFILL | WEEKLY | LEVEL_UP
+  amount    BigInt
+  periodKey String // e.g. DAILY:2026-10-06, REFILL:<window>, LEVEL_UP:10
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, periodKey])
+  @@index([userId, type, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────────────────────
+
+model ChatMessage {
+  id         String       @id @default(cuid())
+  userId     String
+  room       String       @default("global")
+  content    String
+  replyToId  String?
+  mentions   String[]
+  deletedAt  DateTime?
+  deletedBy  String?
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replyTo    ChatMessage? @relation("Replies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies    ChatMessage[] @relation("Replies")
+  reports    ChatReport[]
+
+  @@index([room, createdAt])
+  @@index([userId, createdAt])
+}
+
+model ChatMute {
+  id        String   @id @default(cuid())
+  userId    String
+  mutedById String
+  reason    String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  liftedAt  DateTime?
+  user      User     @relation("MutedUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model ChatBan {
+  id        String    @id @default(cuid())
+  userId    String
+  bannedById String
+  reason    String?
+  createdAt DateTime  @default(now())
+  liftedAt  DateTime?
+  user      User      @relation("BannedUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ChatReport {
+  id          String      @id @default(cuid())
+  messageId   String
+  reporterId  String
+  reason      String
+  status      String      @default("OPEN") // OPEN | RESOLVED | DISMISSED
+  resolvedBy  String?
+  createdAt   DateTime    @default(now())
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reporter    User        @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, reporterId])
+  @@index([status, createdAt])
+}
+
+/// Personal block list (blocked users' messages are hidden for the blocker)
+model UserBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+}
+
+model ModerationLog {
+  id          String   @id @default(cuid())
+  moderatorId String
+  targetUserId String?
+  action      String // DELETE_MESSAGE | WARN | MUTE | UNMUTE | CHAT_BAN | CHAT_UNBAN | SUSPEND
+  messageId   String?
+  reason      String?
+  durationSec Int?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  moderator   User     @relation("Moderator", fields: [moderatorId], references: [id], onDelete: Cascade)
+  target      User?    @relation("ModerationTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([targetUserId, createdAt])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Responsible play
+// ─────────────────────────────────────────────────────────────
+
+model ResponsiblePlaySettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  dailyWagerLimit BigInt? // null = no limit
+  dailyLossLimit  BigInt?
+  timezone        String   @default("UTC")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum LimitType {
+  DAILY_WAGER
+  DAILY_LOSS
+}
+
+enum LimitChangeStatus {
+  PENDING
+  APPLIED
+  CANCELLED
+  SUPERSEDED
+}
+
+model ResponsiblePlayLimitChange {
+  id          String            @id @default(cuid())
+  userId      String
+  limitType   LimitType
+  oldValue    BigInt?
+  newValue    BigInt? // null = remove limit
+  requestedAt DateTime          @default(now())
+  effectiveAt DateTime
+  status      LimitChangeStatus
+  resolvedAt  DateTime?
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, effectiveAt])
+}
+
+enum SelfExclusionType {
+  COOLDOWN_24H
+  COOLDOWN_72H
+  LOCK_1W
+  EXCLUSION_1M
+  EXCLUSION_3M
+  EXCLUSION_6M
+  EXCLUSION_1Y
+  EXCLUSION_INDEFINITE
+}
+
+enum SelfExclusionStatus {
+  ACTIVE
+  EXPIRED
+  REINSTATEMENT_REQUESTED
+  REINSTATED
+}
+
+model SelfExclusion {
+  id        String              @id @default(cuid())
+  userId    String
+  type      SelfExclusionType
+  startsAt  DateTime
+  endsAt    DateTime? // null = indefinite
+  status    SelfExclusionStatus @default(ACTIVE)
+  reinstatementRequestedAt DateTime?
+  reinstatedAt   DateTime?
+  reinstatedById String?
+  createdAt DateTime            @default(now())
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, endsAt])
+}
+
+/// Per-user per-local-day running totals. Updated in the same transaction
+/// as every BET / WIN / REFUND ledger entry so eligibility checks are O(1).
+model DailyPlayAggregate {
+  userId    String
+  date      DateTime @db.Date // local date in the user's responsible-play timezone
+  wagered   BigInt   @default(0)
+  won       BigInt   @default(0) // gross returns credited
+  lost      BigInt   @default(0) // max(0, wagered - won)
+  net       BigInt   @default(0) // won - wagered
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Notifications, admin, settings
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String // REWARD | LEVEL_UP | LIMIT | MODERATION | SYSTEM
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  action      String
+  targetType  String
+  targetId    String?
+  before      Json?
+  after       Json?
+  reason      String?
+  ip          String?
+  createdAt   DateTime @default(now())
+  admin       User     @relation("AuditAdmin", fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([adminUserId, createdAt])
+}
+
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
