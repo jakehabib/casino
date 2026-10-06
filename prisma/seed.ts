@@ -49,11 +49,21 @@ async function main() {
   for (const [key, schema] of Object.entries(SETTINGS)) {
     await prisma.siteSetting.upsert({ where: { key }, create: { key, value: schema.parse({}) as object }, update: {} });
   }
-  await upsertUser('Demo', 'demo@nova.test', 'demo12345', 'USER', 100_000n);
-  await upsertUser('Moderator', 'mod@nova.test', 'moderator123', 'MODERATOR', 100_000n);
-  await upsertUser('Admin', 'admin@nova.test', 'admin12345', 'ADMIN', 100_000n);
-  await upsertUser('SuperAdmin', 'super@nova.test', 'superadmin123', 'SUPER_ADMIN', 100_000n);
-  console.log('Seed complete. Demo login: demo@nova.test / demo12345');
+  // Demo accounts: always in development; in production only with SEED_DEMO_USERS=true.
+  if (process.env.NODE_ENV !== 'production' || process.env.SEED_DEMO_USERS === 'true') {
+    await upsertUser('Demo', 'demo@nova.test', 'demo12345', 'USER', 100_000n);
+    await upsertUser('Moderator', 'mod@nova.test', 'moderator123', 'MODERATOR', 100_000n);
+    await upsertUser('Admin', 'admin@nova.test', 'admin12345', 'ADMIN', 100_000n);
+    await upsertUser('SuperAdmin', 'super@nova.test', 'superadmin123', 'SUPER_ADMIN', 100_000n);
+    console.log('Demo accounts ready. Demo login: demo@nova.test / demo12345');
+  }
+  // Owner account for a fresh deployment: ADMIN_EMAIL + ADMIN_PASSWORD (+ ADMIN_USERNAME).
+  if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+    if (process.env.ADMIN_PASSWORD.length < 10) throw new Error('ADMIN_PASSWORD must be at least 10 characters');
+    await upsertUser(process.env.ADMIN_USERNAME || 'Owner', process.env.ADMIN_EMAIL.toLowerCase(), process.env.ADMIN_PASSWORD, 'SUPER_ADMIN', 100_000n);
+    console.log(`Owner account ready: ${process.env.ADMIN_EMAIL}`);
+  }
+  console.log('Seed complete.');
 }
 
 main()

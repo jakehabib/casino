@@ -42,7 +42,13 @@
     ".next-social/types/**/*.ts",
     ".next-social/dev/types/**/*.ts",
     ".next-slots/types/**/*.ts",
-    ".next-slots/dev/types/**/*.ts"
+    ".next-slots/dev/types/**/*.ts",
+    ".next-oc/types/**/*.ts",
+    ".next-oc/dev/types/**/*.ts",
+    ".next-prod/types/**/*.ts",
+    ".next-prod/dev/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

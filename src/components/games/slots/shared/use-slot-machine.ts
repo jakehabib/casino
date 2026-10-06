@@ -6,7 +6,7 @@ import { api, ApiError, requestId } from '@/lib/api';
 import { playSound } from '@/audio/audio-manager';
 import { useBalance } from '@/stores/balance-store';
 import { useGameErrorHandler } from '@/components/games/shared/use-game-action';
-import type { Grid, Pos, SpinOutcome, SpinWin } from '@/engines/slots/types';
+import type { GridTransform, Grid, Pos, SpinOutcome, SpinWin } from '@/engines/slots/types';
 import type { PublicBonus, PublicSlotDefinition, ReelColumn, SlotSpinResponse, SlotStateResponse } from './types';
 import { posKey } from './types';
 import { winTier, type WinTier } from './win-counter';
@@ -137,6 +137,11 @@ export function useSlotMachine(slotId: string) {
   const [turbo, setTurboState] = useState(false);
   const [autoplay, setAutoplay] = useState<(AutoplayConfig & { remaining: number }) | null>(null);
   const [cycleIndex, setCycleIndex] = useState(0);
+  // Presentation beats (for machine-specific feature animations).
+  const [current, setCurrent] = useState<SpinOutcome | null>(null);
+  const [revealing, setRevealing] = useState(false);
+  const [activeTransform, setActiveTransform] = useState<GridTransform | null>(null);
+  const [stepIndex, setStepIndex] = useState(-1);
 
   const busy = useRef(false);
   const slam = useRef(false);
@@ -241,6 +246,7 @@ export function useSlotMachine(slotId: string) {
       const landed = step0.landed ?? step0.grid;
       const scatter = d.scatter.symbol;
       const need = d.scatter.minCount;
+      setCurrent(o);
 
       // Anticipation from the first reel after which minCount-1 scatters are visible.
       let seen = 0;
@@ -271,6 +277,10 @@ export function useSlotMachine(slotId: string) {
         for (const m of step0.modifiers) {
           if (m.kind === 'ORRERY') void flashBanner(`Orrery ×${m.multiplier}`, 'Spin multiplier', 1300);
         }
+        // Reveal beat: themes animate the modifier before it changes the grid.
+        setRevealing(true);
+        await wait(900);
+        setRevealing(false);
       }
       if (step0.transforms?.length) {
         let cols = landedCols;
@@ -279,10 +289,12 @@ export function useSlotMachine(slotId: string) {
           cols = cols.map((col, r) => col.map((c, y) => (set.has(posKey(r, y)) ? { ...c, symbol: t.symbol, dropFrom: 0 } : c)));
           setColumns(cols);
           setTransformed(set);
+          setActiveTransform(t);
           playSound(t.kind === 'EXPANDING_WILD' ? 'bonus' : 'cascade', { pitch: t.kind === 'EXPANDING_WILD' ? 1.4 : 1.2 });
           await wait(t.kind === 'EXPANDING_WILD' ? 750 : 600);
         }
         setTransformed(null);
+        setActiveTransform(null);
         setColumns(toColumnsKeep(cols, step0.grid));
       }
 
@@ -291,6 +303,7 @@ export function useSlotMachine(slotId: string) {
       for (let i = 0; i < o.steps.length; i++) {
         if (!alive.current) return;
         const step = o.steps[i];
+        setStepIndex(i);
         if (step.wins.length) {
           running += step.stepWin;
           setWinAmount(running);
@@ -312,6 +325,9 @@ export function useSlotMachine(slotId: string) {
         }
       }
       if (o.totalWin !== running) setWinAmount(o.totalWin);
+      setStepIndex(o.steps.length);
+      // Collection beat: themes animate collected relics into their meter.
+      if (o.freeSpins?.relics?.landed) await wait(750);
 
       // Celebrate
       const bet = o.betLevel;
@@ -376,6 +392,10 @@ export function useSlotMachine(slotId: string) {
     setStepMultiplier(1);
     setCycleIndex(0);
     setLastOutcome(null);
+    setCurrent(null);
+    setRevealing(false);
+    setActiveTransform(null);
+    setStepIndex(-1);
     if (free) setFsCurrent((bonusRef.current?.played ?? 0) + 1);
     setSpinning(new Array(d.reels).fill(true));
     playSound('reelStart');
@@ -533,6 +553,14 @@ export function useSlotMachine(slotId: string) {
     fsCurrent,
     lastWin,
     lastOutcome,
+    /** Outcome being presented (null while the reels spin before the response). */
+    current,
+    /** True during the modifier reveal beat (before modifier transforms apply). */
+    revealing,
+    /** Grid transform currently animating (expanding wild / modifier / supernova). */
+    activeTransform,
+    /** Index of the step being presented; `steps.length` once every step is done; -1 before. */
+    stepIndex,
     reduced,
     // controls
     betLevel,
