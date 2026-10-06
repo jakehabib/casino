@@ -266,7 +266,8 @@ export function BlackjackTable({
                     active={i === view!.active && !settled}
                     multi={multi}
                     settled={settled}
-                    showAmount={multi}
+                    // Per-hand amounts collide on phones with 3+ hands; the round total is shown centrally.
+                    showAmount={multi && !(compact && hands.length > 2)}
                   />
                 ))}
               </div>

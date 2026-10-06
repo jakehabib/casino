@@ -295,6 +295,8 @@ export function useBaccarat() {
       setBets(lastBets);
       return void deal(lastBets);
     }
+    // "Rebet & Deal" is offered whenever there are last bets; never fail silently.
+    if (lastBets && total(lastBets) > 0) toast.error('Can’t rebet', 'Your last bet exceeds your balance or the table limit.');
   }, [phase, pending, staked, deal, lastBets, fits, startBetting]);
 
   const primaryMode: 'deal' | 'rebet-deal' | 'none' =

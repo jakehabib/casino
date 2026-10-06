@@ -38,7 +38,8 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
 
   useHotkeys(
     {
-      Space: () => void m.spin(),
+      // Same as the Spin button: while autoplay runs (outside a bonus) Space stops it.
+      Space: () => (m.autoplay && !m.bonus ? m.stopAutoplay() : void m.spin()),
       t: () => m.setTurbo(!m.turbo),
       ArrowUp: m.canChangeBet ? () => step(1) : undefined,
       ArrowDown: m.canChangeBet ? () => step(-1) : undefined,
@@ -77,9 +78,9 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
   );
 
   return (
-    <div className="surface-panel rounded-xl px-3 py-3 sm:px-4" data-testid="slot-controls">
+    <div className="@container surface-panel rounded-xl px-3 py-3 sm:px-4" data-testid="slot-controls">
       {/* Mobile */}
-      <div className="flex flex-col gap-3 md:hidden">
+      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 @min-[720px]:hidden">
         <div className="flex items-center justify-between gap-2">
           <AutoplayButton m={m} />
           {spinButton}
@@ -99,7 +100,7 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
       </div>
 
       {/* Tablet / desktop */}
-      <div className="hidden items-center gap-4 md:flex">
+      <div className="hidden items-center gap-4 @min-[720px]:flex">
         <div className="flex min-w-0 flex-1 items-center gap-4 lg:gap-6">
           <Readout label="Balance" value={balance} icon />
           <Readout label="Last win" value={m.lastWin} tone={m.lastWin > 0 ? 'win' : 'muted'} />

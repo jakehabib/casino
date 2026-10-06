@@ -177,6 +177,9 @@ export function useSlotMachine(slotId: string) {
     setSpinning(new Array(d.reels).fill(false));
     setAnticipation(new Array(d.reels).fill(false));
     setBonus(s.bonus);
+    // Restore the "last win" readout: the running round win mid-bonus, else the last round's win.
+    const ls = s.lastSpin;
+    setLastWin(s.bonus ? s.bonus.roundWin : ls ? (ls.isFreeSpin ? (ls.outcome.freeSpins?.roundWin ?? ls.payout) : ls.payout) : 0);
     const prefs = typeof window !== 'undefined' ? readPrefs(slotId) : {};
     const lv = prefs.betLevel && s.betLevels.includes(prefs.betLevel) ? prefs.betLevel : (s.betLevels[Math.min(2, s.betLevels.length - 1)] ?? 100);
     setBetLevelState(lv);
