@@ -215,7 +215,18 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             {tab === 'ledger' ? <LedgerTable userId={userId} /> : null}
             {tab === 'games' ? <GamesTable userId={userId} /> : null}
             {tab === 'moderation' ? <ModerationList items={d.moderation} /> : null}
-            {tab === 'audit' ? <AuditList items={d.audit} /> : null}
+            {tab === 'audit' ? (
+              <>
+                <AuditList items={d.audit} />
+                {d.audit.length ? (
+                  <div className="border-t border-line-soft p-3 text-center">
+                    <Link href={`/admin/audit?targetId=${userId}`} className="text-xs font-medium text-fg-muted hover:text-fg">
+                      Open in audit log →
+                    </Link>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </Panel>
         </div>
 
@@ -429,9 +440,9 @@ function AuditList({ items }: { items: AdminUserDetail['audit'] }) {
               {a.reason ? ` · “${a.reason}”` : ''}
             </div>
           </div>
-          <Link href={`/admin/audit?id=${a.id}`} className="shrink-0 text-xs text-fg-subtle hover:text-fg">
+          <span className="shrink-0 text-xs text-fg-subtle">
             <Time at={a.createdAt} />
-          </Link>
+          </span>
         </li>
       ))}
     </ul>
