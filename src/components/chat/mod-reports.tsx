@@ -37,7 +37,7 @@ function reasonSummary(reports: ReportItem['reports']) {
     counts.set(code, (counts.get(code) ?? 0) + 1);
     if (rest.length) notes.push(rest.join(': '));
   }
-  return { counts: [...counts.entries()].sort((a, b) => b[1] - a[1]), notes };
+  return { counts: [...counts.entries()].sort((a, b) => b[1] - a[1]), notes: [...new Set(notes)] };
 }
 
 function ReportCard({ item, status, onDialog }: { item: ReportItem; status: Status; onDialog: (s: ModDialogSpec) => void }) {

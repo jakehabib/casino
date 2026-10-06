@@ -246,9 +246,12 @@ export async function listReports(input: { actorId: string; status: ReportStatus
           lastReportedAt: group[0].createdAt.toISOString(),
         };
       }),
-    counts: Object.fromEntries(
-      (await prisma.chatReport.groupBy({ by: ['status'], _count: { _all: true } })).map((g) => [g.status, g._count._all]),
-    ) as Partial<Record<ReportStatus, number>>,
+    /** Number of reported MESSAGES per status (a message with 3 reports counts once). */
+    counts: (await prisma.chatReport.groupBy({ by: ['status', 'messageId'] })).reduce<Partial<Record<ReportStatus, number>>>((acc, g) => {
+      const k = g.status as ReportStatus;
+      acc[k] = (acc[k] ?? 0) + 1;
+      return acc;
+    }, {}),
   };
 }
 
