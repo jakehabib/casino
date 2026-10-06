@@ -186,7 +186,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
               </div>
               <KeyValue
                 items={[
-                  { label: 'Joined', value: formatDateTime(u.createdAt) },
+                  { label: 'Joined', value: <Time at={u.createdAt} /> },
                   { label: 'Last seen', value: <Time at={u.lastSeenAt} relative /> },
                   { label: 'Level', value: `${u.level} · ${u.tier}` },
                   { label: 'Lifetime XP', value: u.lifetimeXp.toLocaleString('en-US') },

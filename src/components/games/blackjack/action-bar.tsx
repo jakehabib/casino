@@ -1,5 +1,5 @@
 'use client';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Hand, Plus, Split, ChevronsUp, ShieldCheck, X, RotateCcw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
@@ -21,10 +21,9 @@ function Row({ id, children }: { id: string; children: ReactNode }) {
   return (
     <motion.div
       data-row={id}
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: DUR.fast, ease: EASE.out }}
+      transition={{ duration: DUR.standard, ease: EASE.out }}
       className="flex min-h-12 items-center gap-2"
     >
       {children}
@@ -132,5 +131,6 @@ export function ActionBar({
     );
   }
 
-  return <AnimatePresence mode="wait" initial={false}>{content}</AnimatePresence>;
+  // Enter-only transitions: a new server state must never wait on an exit animation.
+  return content;
 }

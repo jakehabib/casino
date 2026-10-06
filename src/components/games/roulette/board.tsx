@@ -63,8 +63,8 @@ export const RouletteBoard = memo(function RouletteBoard({ orientation, bets, se
   }, []);
   // Row heights follow the cell width so cells stay well proportioned at every size.
   const unit = boardW / (horizontal ? 14 : 3.6);
-  const row = horizontal ? Math.round(Math.max(40, Math.min(54, unit * 0.95))) : 36;
-  const out = horizontal ? Math.round(Math.max(38, Math.min(44, row * 0.82))) : 40;
+  const row = horizontal ? Math.round(Math.max(40, Math.min(62, unit * 1.12))) : 36;
+  const out = horizontal ? Math.round(Math.max(38, Math.min(48, row * 0.8))) : 40;
   const chipPx = Math.round(Math.max(22, Math.min(30, (horizontal ? Math.min(unit, row) : row) * 0.72)));
 
   const setHot = useCallback(
@@ -124,6 +124,9 @@ export const RouletteBoard = memo(function RouletteBoard({ orientation, bets, se
         onFocus={() => setHot(spot)}
         onBlur={() => setHot(null)}
         onClick={() => onPlace(spot)}
+        onPointerUp={(e) => {
+          if (e.pointerType === 'touch') setTimeout(() => setHot(null), 260);
+        }}
         className={cn(
           'relative flex items-center justify-center border-[0.5px] border-white/15 text-[13px] font-semibold tracking-wide text-fg/90 transition-[background-color,box-shadow] duration-150 disabled:cursor-default',
           isHover && !disabled ? 'bg-white/[0.09]' : 'bg-transparent',
@@ -180,7 +183,7 @@ export const RouletteBoard = memo(function RouletteBoard({ orientation, bets, se
             if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 10) return; // a scroll, not a tap
             const spot = hit(e.clientX, e.clientY);
             if (spot) onPlace(spot);
-            if (e.pointerType === 'touch') setTimeout(() => setHover(null), 260);
+            if (e.pointerType === 'touch') setTimeout(() => setHot(null), 260);
           }}
         />
         <div className="pointer-events-none absolute inset-0 z-[3]">

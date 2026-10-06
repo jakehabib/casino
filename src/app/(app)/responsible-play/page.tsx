@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
 import { TodayPanel } from '@/components/responsible-play/today-panel';
 import { AccountingRules, LimitsPanel } from '@/components/responsible-play/limits-panel';
-import { ExclusionPanel, RestrictionHistory } from '@/components/responsible-play/exclusion-panel';
+import { ActiveRestriction, ExclusionPanel, RestrictionHistory } from '@/components/responsible-play/exclusion-panel';
 import { useRpSummary } from '@/components/responsible-play/use-rp';
 import { BRAND } from '@/lib/branding';
 
@@ -79,7 +79,8 @@ function Content() {
   if (isError || !data) return <ErrorState title="Couldn’t load your settings" body="Your limits and breaks are unaffected. Please try again." onRetry={() => void refetch()} />;
   return (
     <div className="space-y-10">
-      <section aria-labelledby="today">
+      {data.exclusion ? <ActiveRestriction ex={data.exclusion} waitDays={data.rules.reinstatementWaitDays} /> : null}
+      <section aria-label="Today">
         <TodayPanel data={data} />
       </section>
 
@@ -94,10 +95,10 @@ function Content() {
       <section>
         <SectionHeading
           id="breaks"
-          title="Breaks & self-exclusion"
+          title={data.exclusion ? 'Extend your restriction' : 'Breaks & self-exclusion'}
           description={
             data.exclusion
-              ? 'A restriction is in place. You can extend it, but it can’t be cancelled or shortened.'
+              ? 'You can make it longer at any time. It can never be cancelled or made shorter.'
               : 'Step away from casino play for a set time. Once started, a break can’t be cancelled or shortened.'
           }
         />

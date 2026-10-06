@@ -28,7 +28,7 @@ export function handWidth(cards: number, size: CardSize, doubled: boolean) {
   if (cards <= 0) return m.w;
   const plain = doubled ? cards - 1 : cards;
   let w = m.w + Math.max(0, plain - 1) * m.dx;
-  if (doubled) w = Math.max(w, (plain - 1) * m.dx + m.dx + m.h);
+  if (doubled) w = Math.max(w, (plain - 1) * m.dx + Math.round(m.w * 0.62) + m.h);
   return w;
 }
 
@@ -177,8 +177,9 @@ export function CardFan({
         {cards.map((c, idx) => {
           const sideways = !!doubled && idx === 2;
           const key = `${roundId}:${c.i}`;
-          const left = sideways ? (idx - 1) * m.dx + m.dx + (m.h - m.w) / 2 : idx * m.dx;
-          const top = (n - 1 - idx) * m.dy + (sideways ? (m.h - m.w) / 2 - m.dy : 0);
+          // A doubled card lies sideways across the hand: its visual box is h×w.
+          const left = sideways ? (idx - 1) * m.dx + Math.round(m.w * 0.62) + (m.h - m.w) / 2 : idx * m.dx;
+          const top = (n - 1 - idx) * m.dy;
           return (
             <DealtCard
               key={key}
@@ -238,7 +239,7 @@ export function PlayerHand({
           <TotalPill total={hand.blackjack && hand.cards.length === 2 ? 'BJ' : hand.bust ? hand.total : formatTotal(hand.total, hand.soft)} tone={tone} />
         ) : null}
       </div>
-      <div className={cn('relative rounded-xl transition-opacity duration-300', dim && !hand.outcome && 'opacity-60')}>
+      <div className={cn('relative rounded-xl transition-opacity duration-300', dim && !hand.outcome && 'opacity-75')}>
         <CardFan roundId={roundId} cards={hand.cards} size={size} doubled={hand.doubled} seen={seen} highlight={highlight} dim={hand.outcome === 'LOSS' || hand.outcome === 'BUST'} />
         <div className="pointer-events-none absolute inset-x-0 -bottom-3 z-30 flex justify-center">
           <AnimatePresence>{hand.outcome ? <ResultBanner key="r" hand={hand} /> : null}</AnimatePresence>

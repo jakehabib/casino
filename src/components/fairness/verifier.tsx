@@ -75,7 +75,7 @@ function HashCheck({ computed, provided, label }: { computed: string | null; pro
 function TextField({ label, value, onChange, placeholder, mono = true, hint, testId, className }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; mono?: boolean; hint?: string; testId?: string; className?: string }) {
   const id = `vf-${label.replace(/\W+/g, '-').toLowerCase()}`;
   return (
-    <div className={className}>
+    <div className={cn('min-w-0', className)}>
       <label htmlFor={id} className="mb-1.5 block text-xs font-medium text-fg-subtle">
         {label}
       </label>
@@ -223,18 +223,18 @@ export function Verifier() {
   const isShoe = game === 'blackjack' || game === 'baccarat';
 
   return (
-    <div className="rounded-xl border border-line bg-surface-1">
+    <div className="min-w-0 rounded-xl border border-line bg-surface-1">
       <div className="border-b border-line-soft p-3 sm:px-5">
         <Tabs items={TABS} value={game} onValueChange={(v) => setGame(v as VerifyGame)} listClassName="w-full sm:w-auto" />
       </div>
       <div className="grid gap-6 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <div className="space-y-3.5">
+        <div className="min-w-0 space-y-3.5">
           <TextField label={isCrash ? 'Round seed' : 'Server seed (revealed)'} value={f.serverSeed} onChange={set('serverSeed')} placeholder="64 hex characters" testId="vf-server-seed" />
           <TextField label={isCrash ? 'Round seed hash' : 'Server seed hash'} value={f.seedHash} onChange={set('seedHash')} placeholder="Committed SHA-256 (optional)" testId="vf-hash" />
           {isCrash ? (
             <TextField label="Salt" value={f.salt} onChange={set('salt')} placeholder={CRASH_SALT} hint={`Public, fixed salt: ${CRASH_SALT}`} />
           ) : (
-            <div className="grid grid-cols-[1fr_120px] gap-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_96px] sm:grid-cols-[minmax(0,1fr)_120px] gap-3">
               <TextField label="Client seed" value={f.clientSeed} onChange={set('clientSeed')} testId="vf-client-seed" />
               <TextField label={isShoe ? 'Shoe nonce' : 'Nonce'} value={f.nonce} onChange={set('nonce')} placeholder="0" testId="vf-nonce" />
             </div>

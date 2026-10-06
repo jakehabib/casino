@@ -14,6 +14,7 @@ import { CreditIcon } from '@/components/ui/credit-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
 import { Tooltip } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/toast';
 import { api, ApiError, requestId } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { formatCredits } from '@/lib/format';
@@ -89,7 +90,7 @@ function RouletteTableLoaded({ state }: { state: RouletteState }) {
   const [stageRef, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<BetSpot | null>(null);
   const [shown, setShown] = useState<number | null>(state.lastRound?.winningNumber ?? null);
-  const [highlight, setHighlight] = useState(false);
+  const [highlight, setHighlight] = useState(state.lastRound !== null);
   const [chip, setChipState] = useState<number>(1_000);
   const balance = useDisplayBalance();
 
@@ -134,8 +135,7 @@ function RouletteTableLoaded({ state }: { state: RouletteState }) {
     if (spinning || mutation.isPending) return;
     const slip = slipForSpin;
     if (!slip || !Object.keys(slip).length) {
-      playSound('error');
-      setHover(null);
+      toast.info('Place your bets', 'Choose a chip and tap the layout to bet.');
       return;
     }
     const err = table.checkSlip(slip);
@@ -266,12 +266,14 @@ function RouletteTableLoaded({ state }: { state: RouletteState }) {
     />
   );
 
-  const outcome = result ? (
-    <motion.div key={result.roundId} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-sm">
-      <NumberPill n={result.winningNumber} />
-      {result.totalPayout > 0 ? (
-        <span className={cn('font-semibold', result.totalPayout >= result.totalWagered * 10 ? 'text-gold-bright' : 'text-win')}>
-          Won {formatCredits(result.totalPayout)}
+  // After a refresh the latest round (from /state) is shown until the next spin.
+  const shownRound = spinning ? null : (result ?? state.lastRound);
+  const outcome = shownRound ? (
+    <motion.div key={shownRound.roundId} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-sm">
+      <NumberPill n={shownRound.winningNumber} />
+      {shownRound.totalPayout > 0 ? (
+        <span className={cn('font-semibold', shownRound.totalPayout >= shownRound.totalWagered * 10 ? 'text-gold-bright' : 'text-win')}>
+          Won {formatCredits(shownRound.totalPayout)}
         </span>
       ) : (
         <span className="text-fg-muted">No win this spin</span>
@@ -282,13 +284,10 @@ function RouletteTableLoaded({ state }: { state: RouletteState }) {
   return (
     <div className="space-y-3">
       <Stage className="overflow-visible bg-[radial-gradient(120%_70%_at_50%_0%,#1a1e27_0%,#13161c_55%,#111318_100%)]">
-        <div ref={stageRef} className={cn('relative', wide ? 'grid grid-cols-[minmax(300px,400px)_minmax(0,1fr)] gap-6 p-5' : 'space-y-3 p-3 sm:p-4')}>
+        <div ref={stageRef} className={cn('relative', wide ? 'grid grid-cols-[minmax(300px,380px)_minmax(0,1fr)] gap-7 p-5' : 'space-y-3 p-3 sm:p-4')}>
           {wide ? (
             <>
-              <div className="flex flex-col gap-4">
-                {wheel}
-                <RecentStats recent={recent} />
-              </div>
+              <div className="flex items-center">{wheel}</div>
               <div className="flex min-w-0 flex-col justify-center gap-3">
                 <div className="flex items-center justify-between gap-3">
                   <HistoryStrip recent={recent} />
@@ -296,6 +295,7 @@ function RouletteTableLoaded({ state }: { state: RouletteState }) {
                 </div>
                 <div className="py-1">{board}</div>
                 {infoLine}
+                <RecentStats recent={recent} row />
               </div>
             </>
           ) : (
@@ -327,7 +327,7 @@ function RouletteTableLoaded({ state }: { state: RouletteState }) {
         setChip={setChip}
         balance={balance}
         stake={stakeShown}
-        lastWin={result?.totalPayout ?? null}
+        lastWin={shownRound?.totalPayout ?? null}
         payoutRef={payoutRef}
         spinning={spinning}
         pending={mutation.isPending}
@@ -482,7 +482,7 @@ function ActionButton({ label, kbd, icon, onClick, disabled, className, showLabe
 function Readout({ label, value, tone }: { label: string; value: number | null; tone?: 'win' }) {
   return (
     <div className="min-w-0 text-right lg:text-left">
-      <div className="text-[10px] font-medium uppercase tracking-wider text-fg-subtle">{label}</div>
+      <div className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wider text-fg-subtle">{label}</div>
       <div className={cn('tabular flex items-center justify-end gap-1 text-sm font-semibold lg:justify-start', tone === 'win' ? 'text-win' : 'text-fg')}>
         <CreditIcon size={13} />
         {value === null ? '—' : <AnimatedNumber value={value} duration={0.5} />}

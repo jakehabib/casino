@@ -290,7 +290,7 @@ export function BetPanel({ slot, signedIn, hotkeys, compact }: { slot: 0 | 1; si
           <Check size={14} /> Cashed out <span className="tabular">{((myBet.cashoutAt ?? 0) / 100).toFixed(2)}×</span>
         </span>
         <span className="tabular flex items-center gap-1 font-semibold text-win">
-          +<CreditIcon size={13} />
+          <CreditIcon size={13} />
           {formatCredits(myBet.payout ?? 0)}
         </span>
       </motion.div>

@@ -5,7 +5,7 @@ import { toNum } from '@/lib/money';
 import { ROLE_RANK } from '@/server/auth/tokens';
 import { PostCommit } from '@/server/realtime/events';
 import { applyLedgerEntry, listTransactions, lockWallet } from '@/server/services/wallet/wallet-service';
-import { levelFromLifetimeXp, tierForLevel } from '@/lib/levels';
+import { TIER_LABEL, levelFromLifetimeXp, tierForLevel } from '@/lib/levels';
 import { type Actor, type AuditContext, assertOutranks, cleanReason, requireRole, writeAudit } from './access';
 import { getUserResponsiblePlay } from './responsible-play';
 
@@ -131,7 +131,7 @@ export async function getUserDetail(actor: Actor, userId: string) {
       createdAt: user.createdAt.toISOString(),
       lastSeenAt: user.lastSeenAt.toISOString(),
       level: prog.level,
-      tier: tierForLevel(prog.level),
+      tier: TIER_LABEL[tierForLevel(prog.level)],
       lifetimeXp: toNum(user.lifetimeXp),
       activeSessions: sessions,
     },

@@ -73,7 +73,7 @@ function Body({ round }: { round: RoundRef }) {
         <Stat label="Payout" value={formatCredits(d.payout)} tone={d.payout > 0 ? undefined : 'muted'} />
         <Stat label="Net" value={formatCredits(d.net, { sign: true })} tone={d.net > 0 ? 'win' : 'muted'} />
       </div>
-      <div className="rounded-xl border border-line bg-surface-1 p-3 sm:p-4">
+      <div className="min-w-0 sm:rounded-xl sm:border sm:border-line sm:bg-surface-1 sm:p-4">
         <Visual detail={d} />
       </div>
       <FairnessBlock detail={d} />

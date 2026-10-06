@@ -7,12 +7,14 @@ import { MobileDrawer } from '@/components/ui/drawer';
 import { Logo } from '@/components/brand/logo';
 import { NavSections, FooterNav, isActive } from './sidebar';
 import { ChatPanel } from '@/components/chat/chat-panel';
+import { useChatUnread } from '@/components/chat/chat-store';
 import { OnlineCount } from './topbar';
 import { cn } from '@/lib/cn';
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { setMobileMenuOpen, setMobileChatOpen, mobileMenuOpen, mobileChatOpen } = useUi();
+  const chatUnread = useChatUnread();
   const item = 'flex flex-1 flex-col items-center justify-center gap-1 text-[10.5px] font-medium transition-colors';
   return (
     <>
@@ -38,7 +40,20 @@ export function MobileBottomNav() {
             History
           </Link>
           <button className={cn(item, mobileChatOpen ? 'text-fg' : 'text-fg-subtle')} onClick={() => setMobileChatOpen(true)} data-testid="mobile-chat-button">
-            <MessageSquare size={19} />
+            <span className="relative">
+              <MessageSquare size={19} />
+              {chatUnread.count > 0 && !mobileChatOpen ? (
+                <span
+                  className={cn(
+                    'absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold leading-none text-white ring-2 ring-bg',
+                    chatUnread.mention ? 'bg-accent' : 'bg-surface-4 text-fg',
+                  )}
+                  data-testid="mobile-chat-unread"
+                >
+                  {chatUnread.count > 99 ? '99+' : chatUnread.count}
+                </span>
+              ) : null}
+            </span>
             Chat
           </button>
         </div>

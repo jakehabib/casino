@@ -259,6 +259,8 @@ export function SettingsForm({
   );
 }
 
+const groupDigits = (s: string) => (/^\d+$/.test(s) ? Number(s).toLocaleString('en-US') : s);
+
 const inputCls =
   'tabular h-10 w-full min-w-0 rounded-lg border bg-bg-raised px-3 text-sm text-fg outline-none transition-[border,box-shadow] placeholder:text-fg-faint focus:border-accent/70 focus:shadow-[0_0_0_3px_#7c5cff26]';
 
@@ -312,8 +314,8 @@ function FieldControl({ f, value, onChange, error, changed }: { f: FieldDef; val
           <Affix before={f.type === 'credits' ? <CreditIcon size={14} /> : undefined} after={after}>
             <input
               inputMode="decimal"
-              value={value as string}
-              onChange={(e) => onChange(e.target.value)}
+              value={f.type === 'credits' ? groupDigits(value as string) : (value as string)}
+              onChange={(e) => onChange(f.type === 'credits' ? e.target.value.replace(/[^\d]/g, '') : e.target.value)}
               className={cn(inputCls, border, f.type === 'credits' && 'pl-9', after && 'pr-12')}
               aria-label={f.label}
               aria-invalid={!!error || undefined}

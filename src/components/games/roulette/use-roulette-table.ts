@@ -147,13 +147,18 @@ export function useRouletteTable(state: RouletteState | undefined) {
               ? `Table maximum is ${formatCredits(limits.maxBet)} per spin`
               : 'Not enough Credits for this bet';
         toast.error('Bet limit reached', why);
-        if (from !== bets) setBets(from);
         return;
+      }
+      if (add < chip) {
+        toast.info(
+          'Bet capped',
+          add === spotRoom ? `${spot.label} is limited to ${formatCredits(betLimits[spot.type].max)}` : add === tableRoom ? `Table maximum is ${formatCredits(limits.maxBet)} per spin` : 'Capped at your available balance',
+        );
       }
       playSound('chip', { pitch: 0.95 + Math.min(0.2, current / 50_000) });
       commit({ ...from, [spot.id]: current + add }, from);
     },
-    [phase, limits, betLimits, balance, base, bets, commit],
+    [phase, limits, betLimits, balance, base, commit],
   );
 
   const actions = useMemo(

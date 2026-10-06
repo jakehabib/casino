@@ -340,8 +340,9 @@ export class CrashRenderer {
         if (mk.label) {
           ctx.font = `600 11px ${getComputedStyle(this.canvas).fontFamily || 'ui-sans-serif'}`;
           const tw = ctx.measureText(mk.label).width;
-          const bx = Math.min(x - tw / 2 - 7, this.plot.right - tw - 14);
-          const by = y - 30;
+          // Below-right of the dot: the area under the curve stays clear of the read-out.
+          const bx = Math.min(x + 9, this.plot.right - tw - 14);
+          const by = Math.min(y + 6, this.plot.bottom - 24);
           ctx.fillStyle = 'rgba(13,32,24,0.92)';
           ctx.strokeStyle = rgba(C.win, 0.5);
           ctx.lineWidth = 1;

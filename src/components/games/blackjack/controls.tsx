@@ -97,7 +97,7 @@ export function BlackjackControls({
           value={chip}
           onChange={onChip}
           disabledAbove={config.maxBet}
-          size={38}
+          size={34}
           className={cn(locked && 'pointer-events-none opacity-50')}
         />
       </div>

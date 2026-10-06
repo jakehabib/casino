@@ -73,7 +73,7 @@ export function PlayersTable() {
             transition={{ duration: DUR.standard, ease: EASE.out }}
             className="overflow-hidden"
           >
-            <div className="grid grid-cols-[minmax(0,1fr)_88px_64px_92px] gap-x-2 border-y border-line bg-surface-2/40 px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-fg-subtle sm:grid-cols-[minmax(0,1fr)_120px_90px_120px]">
+            <div className="grid grid-cols-[minmax(0,1fr)_68px_52px_68px] gap-x-2 border-y border-line bg-surface-2/40 px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-fg-subtle sm:grid-cols-[minmax(0,1fr)_120px_90px_120px]">
               <span>Player</span>
               <span className="text-right">Bet</span>
               <span className="text-right">Cashout</span>
@@ -93,15 +93,15 @@ export function PlayersTable() {
                       layout="position"
                       transition={{ duration: DUR.standard, ease: EASE.out }}
                       className={cn(
-                        'grid grid-cols-[minmax(0,1fr)_88px_64px_92px] items-center gap-x-2 border-b border-line-soft px-4 py-2 text-[13px] last:border-0 sm:grid-cols-[minmax(0,1fr)_120px_90px_120px]',
+                        'grid grid-cols-[minmax(0,1fr)_68px_52px_68px] items-center gap-x-2 border-b border-line-soft px-4 py-2 text-[13px] last:border-0 sm:grid-cols-[minmax(0,1fr)_120px_90px_120px]',
                         won && 'bg-win/[0.045]',
                         me && 'shadow-[inset_2px_0_0_var(--color-accent)]',
                       )}
                     >
                       <span className="flex min-w-0 items-center gap-2">
-                        <Avatar avatarUrl={b.user.avatarUrl} name={b.user.username} size={22} />
-                        <span className={cn('truncate font-medium', b.user.hidden ? 'italic text-fg-subtle' : 'text-fg')}>{b.user.displayName}</span>
-                        {!b.user.hidden ? <LevelBadge level={b.user.level} size="xs" /> : null}
+                        <Avatar avatarUrl={b.user.avatarUrl} name={b.user.username} size={22} className="hidden xs:inline-flex" />
+                        <span className={cn('min-w-[2.5rem] truncate font-medium', b.user.hidden ? 'italic text-fg-subtle' : 'text-fg')}>{b.user.displayName}</span>
+                        {!b.user.hidden ? <LevelBadge level={b.user.level} size="xs" className="hidden sm:inline-flex" /> : null}
                         {me ? <span className="shrink-0 rounded bg-accent-soft px-1 text-[10px] font-semibold text-accent">YOU</span> : null}
                       </span>
                       <span className="tabular flex items-center justify-end gap-1 text-fg-muted">

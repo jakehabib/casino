@@ -85,7 +85,7 @@ export function CrashStage({ onOpenRound }: { onOpenRound: (roundId: string) => 
           m,
           roundId: r?.id ?? null,
           reducedMotion: reducedRef.current,
-          marks: st.marks.map((k) => ({ at: k.cashoutAt, mine: k.mine, label: k.mine ? `+${formatCredits(k.payout)}` : undefined })),
+          marks: st.marks.map((k) => ({ at: k.cashoutAt, mine: k.mine, label: k.mine ? `${(k.cashoutAt / 100).toFixed(2)}×` : undefined })),
         },
         now,
       );
@@ -117,10 +117,10 @@ export function CrashStage({ onOpenRound }: { onOpenRound: (roundId: string) => 
   const voided = round?.voided;
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-line bg-[#0b0c12]">
+    <div className="relative overflow-hidden rounded-xl border border-line bg-[#0b0c12] lg:h-full">
       <div
         ref={wrapRef}
-        className="relative h-[300px] w-full xs:h-[320px] sm:h-[400px] lg:h-[470px]"
+        className="relative h-[300px] w-full xs:h-[320px] sm:h-[400px] lg:h-full lg:min-h-[480px]"
         style={{ background: 'radial-gradient(120% 90% at 78% 0%, #17133a 0%, #0e0f1a 48%, #0a0b10 100%)' }}
       >
         <canvas ref={canvasRef} className="absolute inset-0 block" aria-hidden />
@@ -179,12 +179,12 @@ export function CrashStage({ onOpenRound }: { onOpenRound: (roundId: string) => 
                   'tabular font-semibold leading-none tracking-[-0.03em] transition-[font-size] duration-300',
                   'text-[56px] sm:text-[88px] lg:text-[104px]',
                 )}
-                style={{ textShadow: phase === 'crashed' ? 'none' : '0 0 40px rgba(124,92,255,0.25)' }}
+                style={{ textShadow: phase === 'crashed' ? '0 2px 30px rgba(10,11,16,0.85)' : '0 2px 30px rgba(10,11,16,0.7), 0 0 40px rgba(124,92,255,0.25)' }}
               >
                 {round?.crashPoint !== undefined ? `${(round.crashPoint / 100).toFixed(2)}×` : '1.00×'}
               </div>
               {phase === 'crashed' && round?.crashPoint !== undefined ? (
-                <div className="mt-2 text-xs text-fg-subtle">Next launch shortly</div>
+                <div className="mt-2 text-xs font-medium text-fg-muted [text-shadow:0_1px_12px_rgba(10,11,16,0.9)]">Next launch shortly</div>
               ) : null}
             </div>
           ) : (

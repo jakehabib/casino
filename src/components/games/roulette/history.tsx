@@ -58,7 +58,7 @@ export const HistoryStrip = memo(function HistoryStrip({ recent, max = 20, class
 });
 
 /** Simple distribution over the recent results: colour / parity / range. */
-export const RecentStats = memo(function RecentStats({ recent, className }: { recent: RouletteRecent[]; className?: string }) {
+export const RecentStats = memo(function RecentStats({ recent, className, row }: { recent: RouletteRecent[]; className?: string; row?: boolean }) {
   const s = useMemo(() => {
     const nums = recent.map((r) => r.winningNumber);
     const nz = nums.filter((n) => n !== 0);
@@ -96,34 +96,60 @@ export const RecentStats = memo(function RecentStats({ recent, className }: { re
           </span>
         ) : null}
       </div>
-      <div className="flex h-2 overflow-hidden rounded-full bg-surface-3">
-        <div className="bg-roulette-red transition-[width] duration-500" style={{ width: `${pct(s.red)}%` }} />
-        <div className="bg-roulette-green transition-[width] duration-500" style={{ width: `${pct(s.green)}%` }} />
-        <div className="bg-[#3a3f4b] transition-[width] duration-500" style={{ width: `${pct(s.black)}%` }} />
+      <div className={cn(row ? 'grid grid-cols-3 items-end gap-6' : 'space-y-2.5')}>
+        <div className="space-y-2">
+          <div className="flex h-2 overflow-hidden rounded-full bg-surface-3">
+            <div className="bg-roulette-red transition-[width] duration-500" style={{ width: `${pct(s.red)}%` }} />
+            <div className="bg-roulette-green transition-[width] duration-500" style={{ width: `${pct(s.green)}%` }} />
+            <div className="bg-[#3a3f4b] transition-[width] duration-500" style={{ width: `${pct(s.black)}%` }} />
+          </div>
+          <div className="tabular flex justify-between text-[11px] text-fg-muted">
+            <span><b className="font-semibold text-fg">{pct(s.red)}%</b> Red</span>
+            <span><b className="font-semibold text-fg">{pct(s.green)}%</b> Zero</span>
+            <span><b className="font-semibold text-fg">{pct(s.black)}%</b> Black</span>
+          </div>
+        </div>
+        <Split a={['Odd', s.odd]} b={['Even', s.even]} stacked={row} />
+        <Split a={['1–18', s.low]} b={['19–36', s.high]} stacked={row} />
       </div>
-      <div className="tabular flex justify-between text-[11px] text-fg-muted">
-        <span><b className="font-semibold text-fg">{pct(s.red)}%</b> Red</span>
-        <span><b className="font-semibold text-fg">{pct(s.green)}%</b> Zero</span>
-        <span><b className="font-semibold text-fg">{pct(s.black)}%</b> Black</span>
-      </div>
-      <Split a={['Odd', s.odd]} b={['Even', s.even]} />
-      <Split a={['1–18', s.low]} b={['19–36', s.high]} />
     </div>
   );
 });
 
-function Split({ a, b }: { a: [string, number]; b: [string, number] }) {
+function Split({ a, b, stacked }: { a: [string, number]; b: [string, number]; stacked?: boolean }) {
   const t = a[1] + b[1];
   const pa = t ? Math.round((a[1] / t) * 100) : 50;
+  const bar = (
+    <div className="flex h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
+      <div className="bg-fg-muted/70 transition-[width] duration-500" style={{ width: `${pa}%` }} />
+    </div>
+  );
+  const left = (
+    <span className="whitespace-nowrap">
+      {a[0]} <b className="font-semibold text-fg">{t ? pa : 0}%</b>
+    </span>
+  );
+  const right = (
+    <span className="whitespace-nowrap text-right">
+      <b className="font-semibold text-fg">{t ? 100 - pa : 0}%</b> {b[0]}
+    </span>
+  );
+  if (stacked) {
+    return (
+      <div className="tabular space-y-2 text-[11px] text-fg-muted">
+        <div className="flex">{bar}</div>
+        <div className="flex justify-between">
+          {left}
+          {right}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="tabular flex items-center gap-2 text-[11px] text-fg-muted">
-      <span className="w-[78px] whitespace-nowrap">{a[0]} <b className="font-semibold text-fg">{t ? pa : 0}%</b></span>
-      <div className="flex h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
-        <div className="bg-fg-muted/70 transition-[width] duration-500" style={{ width: `${pa}%` }} />
-      </div>
-      <span className="w-[78px] whitespace-nowrap text-right">
-        <b className="font-semibold text-fg">{t ? 100 - pa : 0}%</b> {b[0]}
-      </span>
+      <span className="w-[78px]">{left}</span>
+      {bar}
+      <span className="w-[78px] text-right">{right}</span>
     </div>
   );
 }

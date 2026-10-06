@@ -32,7 +32,7 @@ export function ResponsiblePlayOverview() {
         description="Player-set breaks, locks and self-exclusions. Staff can view these but never end or shorten them."
       />
       <RestrictedNote className="mb-4">
-        <span className="font-semibold text-fg">Protected by design.</span> Cooldowns and time-limited self-exclusions cannot be overridden by anyone. An indefinite self-exclusion can be lifted only by a Super Admin, only after the player requests a review, and only once the {d ? formatDuration(d.waitMs) : '7-day'} waiting period has passed.
+        <span className="font-semibold text-fg">Protected by design.</span> Cooldowns and time-limited self-exclusions cannot be overridden by anyone. An indefinite self-exclusion can be lifted only by a Super Admin, only after the player requests a review, and only once the {d ? `${Math.round(d.waitMs / 86_400_000)}-day` : '7-day'} waiting period has passed.
       </RestrictedNote>
       {q.isError ? (
         <Panel>

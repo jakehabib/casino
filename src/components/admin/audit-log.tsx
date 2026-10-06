@@ -133,10 +133,12 @@ function AuditRow({ e, open, onToggle }: { e: Entry; open: boolean; onToggle: ()
           <div>
             <Pill tone={ACTION_TONE[e.action] ?? 'neutral'}>{actionLabel(e.action)}</Pill>
           </div>
-          <div className="min-w-0 text-[13px]">
-            <span className="text-fg-subtle">{e.targetType.toLowerCase().replace(/_/g, ' ')}</span>{' '}
-            <span className="font-medium text-fg">{e.targetType === 'USER' && e.targetLabel ? `@${e.targetLabel}` : (e.targetLabel ?? '—')}</span>
-            {e.reason ? <span className="ml-2 truncate text-fg-muted">“{e.reason}”</span> : null}
+          <div className="min-w-0">
+            <div className="truncate text-[13px]">
+              <span className="text-fg-subtle">{e.targetType.toLowerCase().replace(/_/g, ' ')}</span>{' '}
+              <span className="font-medium text-fg">{e.targetType === 'USER' && e.targetLabel ? `@${e.targetLabel}` : (e.targetLabel ?? '—')}</span>
+            </div>
+            {e.reason ? <div className="truncate text-xs text-fg-muted">“{e.reason}”</div> : null}
           </div>
           <div className="flex min-w-0 items-center gap-2 text-xs text-fg-muted">
             <Avatar avatarUrl={e.admin.avatarUrl} name={e.admin.username} size={18} />

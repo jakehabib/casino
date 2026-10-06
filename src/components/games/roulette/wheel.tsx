@@ -91,8 +91,8 @@ export const RouletteWheel = memo(
             const s = st.current;
             s.plan?.resolve();
             const reduced = reduceRef.current;
-            const T = reduced ? 1.1 : 6.4;
-            const Tb = reduced ? 0.9 : 5.3;
+            const T = reduced ? 1.1 : 6.0;
+            const Tb = reduced ? 0.9 : 4.9;
             const target = pocketIndex(n) * POCKET_DEG;
             // Ball starts on the track (if it was not on the wheel yet, at 12 o'clock).
             const psi0 = s.visible ? s.psi : mod(-s.w);
@@ -297,7 +297,7 @@ export const RouletteWheel = memo(
             <path
               d={wedge(R_POCKET_IN, R_NUM_OUT, winIdx * POCKET_DEG - POCKET_DEG / 2, winIdx * POCKET_DEG + POCKET_DEG / 2)}
               fill="#ffffff"
-              fillOpacity="0.16"
+              fillOpacity="0.24"
               stroke="#ffffff"
               strokeOpacity="0.9"
               strokeWidth="1.6"

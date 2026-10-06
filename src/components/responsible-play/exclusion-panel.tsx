@@ -196,7 +196,7 @@ function OptionCard({ option, onSelect, extendLabel }: { option: ExclusionOption
   );
 }
 
-function ActiveRestriction({ ex, waitDays }: { ex: ActiveExclusion; waitDays: number }) {
+export function ActiveRestriction({ ex, waitDays }: { ex: ActiveExclusion; waitDays: number }) {
   const now = useNow(1000);
   const reinstate = useRequestReinstatement();
   const end = ex.endsAt ? new Date(ex.endsAt).getTime() : null;
@@ -239,7 +239,7 @@ function ActiveRestriction({ ex, waitDays }: { ex: ActiveExclusion; waitDays: nu
         <div className="bg-surface-1 px-4 py-3 sm:px-5">
           <dt className="text-xs text-fg-subtle">Remaining</dt>
           <dd className="tabular mt-0.5 text-[13px] font-semibold text-fg" data-testid="restriction-remaining">
-            {end ? formatRemaining(end - now) : '—'}
+            {end ? formatRemaining(end - now) : 'Until reviewed'}
           </dd>
         </div>
       </dl>
@@ -295,18 +295,13 @@ export function ExclusionPanel({ data }: { data: RpSummary }) {
     // Only offer options that extend meaningfully (by more than an hour).
     return (end?.getTime() ?? Infinity) > activeEnd + 3600_000;
   });
-  const primary = active ? offered : offered.filter((o) => !o.extended);
-  const extended = active ? [] : offered.filter((o) => o.extended);
+  const primary = offered.filter((o) => !o.extended);
+  const extended = offered.filter((o) => o.extended);
 
   return (
     <div className="space-y-4">
-      {active ? <ActiveRestriction ex={active} waitDays={waitDays} /> : null}
-
-      {active && offered.length ? (
-        <div>
-          <h3 className="mb-2 text-[13px] font-semibold text-fg">Extend your restriction</h3>
-          <p className="mb-3 text-[13px] text-fg-muted">You can make it longer at any time. It can never be made shorter.</p>
-        </div>
+      {active && !offered.length ? (
+        <p className="rounded-xl border border-line bg-surface-1 px-4 py-3.5 text-[13px] text-fg-muted">Your current restriction is already the longest available.</p>
       ) : null}
 
       {primary.length ? (
@@ -344,7 +339,7 @@ export function ExclusionPanel({ data }: { data: RpSummary }) {
               >
                 <div className="grid gap-3 border-t border-line-soft p-3 sm:grid-cols-2 sm:p-4 lg:grid-cols-4">
                   {extended.map((o) => (
-                    <OptionCard key={o.type} option={o} onSelect={() => setSelected(o.type)} />
+                    <OptionCard key={o.type} option={o} extendLabel={!!active} onSelect={() => setSelected(o.type)} />
                   ))}
                 </div>
               </motion.div>

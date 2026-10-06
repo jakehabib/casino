@@ -26,40 +26,71 @@ function useWidth<T extends HTMLElement>() {
   return [ref, w] as const;
 }
 
-/** Dealing shoe: angled box, card backs, remaining-cards gauge. */
+/** Dealing shoe: angled body, the next card back at the mouth, remaining gauge. */
 function ShoeGraphic({ shoe, anchor, compact }: { shoe: ShoeInfo | null; anchor: React.RefObject<HTMLDivElement | null>; compact: boolean }) {
   const remaining = shoe ? shoe.remaining / shoe.total : 1;
   const cut = shoe ? shoe.cutCard / shoe.total : 0.75;
+  const w = compact ? 64 : 92;
   return (
-    <div className={cn('absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5 sm:right-5 sm:top-4', compact && 'right-2 top-2')} aria-label="Card shoe">
-      <div className="relative" style={{ width: compact ? 58 : 84, height: compact ? 40 : 56 }}>
-        {/* body */}
-        <div className="absolute inset-0 rounded-[8px] bg-gradient-to-b from-[#232733] to-[#14161c] shadow-[0_6px_16px_-4px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-black/60" style={{ transform: 'perspective(220px) rotateX(18deg) skewX(-8deg)' }} />
-        {/* mouth with the next card back */}
-        <div ref={anchor} className="absolute bottom-[18%] left-[10%] h-[46%] w-[46%] -rotate-[8deg] rounded-[3px] bg-[#1b1640] ring-1 ring-white/15" style={{ background: 'repeating-linear-gradient(45deg, #2a2160 0 3px, #221a52 3px 6px)' }} />
-        <div className="absolute right-[10%] top-[24%] h-[52%] w-[24%] rounded-[3px] bg-black/35 ring-1 ring-white/5" />
+    <div className={cn('absolute z-10 flex flex-col items-end gap-1', compact ? 'right-2.5 top-2.5' : 'right-5 top-4')} aria-label="Card shoe">
+      <div className="relative drop-shadow-[0_8px_14px_rgba(0,0,0,0.55)]" style={{ width: w, height: w * 0.62 }}>
+        <svg viewBox="0 0 100 62" className="absolute inset-0 h-full w-full" aria-hidden>
+          <defs>
+            <linearGradient id="bj-shoe-body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#2c303b" />
+              <stop offset="1" stopColor="#14161c" />
+            </linearGradient>
+            <pattern id="bj-shoe-back" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="4" height="4" fill="#221a52" />
+              <rect width="2" height="4" fill="#2c2266" />
+            </pattern>
+          </defs>
+          {/* body */}
+          <path d="M18 58 H92 a4 4 0 0 0 4-4 V14 a4 4 0 0 0-4-4 H40 a6 6 0 0 0-4.6 2.2 L8.6 46.4 A6 6 0 0 0 13.3 58 Z" fill="url(#bj-shoe-body)" stroke="#000" strokeOpacity="0.55" />
+          <path d="M40 11 H92" stroke="#fff" strokeOpacity="0.12" />
+          {/* cards inside */}
+          <path d="M40 18 H90 V52 H22 Z" fill="#000" fillOpacity="0.28" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <path key={i} d={`M${44 + i * 9} 20 V50`} stroke="#fff" strokeOpacity="0.05" />
+          ))}
+          {/* next card at the mouth */}
+          <g transform="rotate(-52 24 40)">
+            <rect x="9" y="30" width="30" height="20" rx="2.2" fill="url(#bj-shoe-back)" stroke="#fff" strokeOpacity="0.22" />
+          </g>
+        </svg>
+        <div ref={anchor} className="absolute" style={{ left: '8%', top: '38%', width: '30%', height: '40%' }} />
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="relative h-1 overflow-hidden rounded-full bg-black/40" style={{ width: compact ? 40 : 56 }} title="Cards remaining">
-          <motion.div className="absolute inset-y-0 left-0 rounded-full bg-white/50" initial={false} animate={{ width: `${remaining * 100}%` }} transition={{ duration: DUR.game, ease: EASE.out }} />
-          <div className="absolute inset-y-0 w-px bg-gold/80" style={{ left: `${(1 - cut) * 100}%` }} />
+        {!compact ? <span className="tabular text-[10px] font-medium text-white/40">{shoe ? `Shoe ${shoe.number}` : 'Shoe'}</span> : null}
+        <div className="relative h-[3px] overflow-hidden rounded-full bg-black/45" style={{ width: compact ? 40 : 52 }} title="Cards remaining in the shoe">
+          <motion.div className="absolute inset-y-0 left-0 rounded-full bg-white/55" initial={false} animate={{ width: `${remaining * 100}%` }} transition={{ duration: DUR.game, ease: EASE.out }} />
+          <div className="absolute inset-y-0 w-[2px] bg-gold" style={{ left: `${(1 - cut) * 100}%` }} />
         </div>
-        {!compact ? <span className="tabular text-[10px] font-medium text-white/45">{shoe ? `Shoe ${shoe.number}` : 'Shoe'}</span> : null}
       </div>
     </div>
   );
 }
 
-/** Discard tray: stacked card edges, height follows the cards dealt from this shoe. */
+/** Discard tray: acrylic tray whose stack grows with the cards dealt from this shoe. */
 function DiscardTray({ shoe, compact }: { shoe: ShoeInfo | null; compact: boolean }) {
-  const lines = shoe ? Math.min(18, Math.round((shoe.dealt / shoe.total) * 26)) : 0;
-  const w = compact ? 34 : 46;
+  const lines = shoe && shoe.dealt > 0 ? Math.max(1, Math.min(22, Math.round((shoe.dealt / shoe.total) * 30))) : 0;
+  const w = compact ? 40 : 52;
+  if (lines === 0) return null;
   return (
-    <div className={cn('absolute left-3 top-3 z-10 sm:left-5 sm:top-4', compact && 'left-2 top-2')} aria-hidden>
-      <div className="relative rounded-[6px] bg-black/25 p-1 ring-1 ring-white/5" style={{ width: w + 8, height: (compact ? 40 : 56) }}>
-        <div className="absolute inset-x-1 bottom-1 flex flex-col-reverse">
+    <div className={cn('absolute z-10', compact ? 'left-2.5 top-2.5' : 'left-5 top-4')} aria-hidden>
+      <div
+        className="relative overflow-hidden rounded-[5px] border border-white/[0.09] bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+        style={{ width: w + 10, height: compact ? 34 : 44 }}
+      >
+        <div className="absolute inset-x-[5px] bottom-[4px] flex flex-col-reverse">
           {Array.from({ length: lines }).map((_, i) => (
-            <div key={i} className="h-[2px] rounded-[1px] border-t border-black/30 bg-[#2a2160]" style={{ width: w, transform: `translateX(${((i * 7) % 3) - 1}px)` }} />
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: ((i * 7) % 3) - 1 }}
+              className="h-[2px] rounded-[1px] border-b border-black/50 bg-[#5446b8]"
+              style={{ width: w }}
+            />
           ))}
         </div>
       </div>
@@ -68,24 +99,30 @@ function DiscardTray({ shoe, compact }: { shoe: ShoeInfo | null; compact: boolea
 }
 
 /** Felt printing: arcs + payout lines (from the live table config). */
-function FeltPrint({ config, compact }: { config: BlackjackTableConfig | null; compact: boolean }) {
+function FeltPrint({ config, faded }: { config: BlackjackTableConfig | null; faded: boolean }) {
   const bj = config?.blackjackPayout === '6:5' ? 'BLACKJACK PAYS 6 TO 5' : 'BLACKJACK PAYS 3 TO 2';
   const dealer = config?.dealerHitsSoft17 ? 'DEALER HITS SOFT 17' : 'DEALER STANDS ON SOFT 17';
   const ins = config?.insurance === false ? '' : '  ·  INSURANCE PAYS 2 TO 1';
   return (
-    <svg viewBox="0 0 1000 260" className="pointer-events-none absolute inset-x-0 mx-auto w-full max-w-[860px] select-none" style={{ top: compact ? 108 : 150 }} aria-hidden>
+    <svg
+      viewBox="0 0 1000 170"
+      preserveAspectRatio="xMidYMid meet"
+      className="pointer-events-none absolute inset-0 m-auto h-full w-full max-w-[900px] select-none transition-opacity duration-500"
+      style={{ opacity: faded ? 0.35 : 1 }}
+      aria-hidden
+    >
       <defs>
-        <path id="bj-arc-1" d="M 130 40 Q 500 250 870 40" />
-        <path id="bj-arc-2" d="M 175 92 Q 500 280 825 92" />
-        <path id="bj-arc-3" d="M 150 64 Q 500 266 850 64" />
+        <path id="bj-arc-1" d="M 110 22 Q 500 196 890 22" />
+        <path id="bj-arc-2" d="M 160 66 Q 500 214 840 66" />
+        <path id="bj-arc-3" d="M 136 44 Q 500 206 864 44" />
       </defs>
-      <use href="#bj-arc-3" fill="none" stroke="#e2b456" strokeOpacity="0.16" strokeWidth="1.2" />
+      <use href="#bj-arc-3" fill="none" stroke="#e2b456" strokeOpacity="0.18" strokeWidth="1.4" />
       <use href="#bj-arc-2" fill="none" stroke="#e2b456" strokeOpacity="0.1" strokeWidth="1.2" />
-      <text fontFamily="var(--font-geist-sans)" fontSize="25" fontWeight="700" letterSpacing="7" fill="#e2b456" fillOpacity="0.32">
+      <text fontFamily="var(--font-geist-sans)" fontSize="27" fontWeight="700" letterSpacing="7" fill="#e2b456" fillOpacity="0.34">
         <textPath href="#bj-arc-1" startOffset="50%" textAnchor="middle">{bj}</textPath>
       </text>
-      <text fontFamily="var(--font-geist-sans)" fontSize="13" fontWeight="600" letterSpacing="3.5" fill="#ffffff" fillOpacity="0.22">
-        <textPath href="#bj-arc-2" startOffset="50%" textAnchor="middle" dy="-8">{dealer}{ins}</textPath>
+      <text fontFamily="var(--font-geist-sans)" fontSize="14" fontWeight="600" letterSpacing="3.5" fill="#ffffff" fillOpacity="0.24">
+        <textPath href="#bj-arc-2" startOffset="50%" textAnchor="middle">{dealer}{ins}</textPath>
       </text>
     </svg>
   );
@@ -176,7 +213,7 @@ export function BlackjackTable({
   const scale = needed > avail ? Math.max(0.6, avail / needed) : 1;
 
   const settled = !!view?.settled;
-  const showBetSpot = !view || (view.settled && hands.length === 0);
+  const showBetSpot = !view;
   const dealerTone = view?.dealer.blackjack ? 'gold' : view && view.dealer.total > 21 ? 'bust' : 'default';
 
   return (
@@ -184,18 +221,17 @@ export function BlackjackTable({
       <div
         ref={ref}
         className="felt relative flex select-none flex-col overflow-hidden rounded-xl border border-felt-line/60 shadow-[inset_0_0_120px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.05)]"
-        style={{ minHeight: compact ? 470 : 590 }}
+        style={{ minHeight: compact ? 520 : 610 }}
         data-testid="bj-table"
       >
         <div className="noise pointer-events-none absolute inset-0 opacity-70" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <FeltPrint config={config} compact={compact} />
         <DiscardTray shoe={shoe} compact={compact} />
         <ShoeGraphic shoe={shoe} anchor={shoeAnchor} compact={compact} />
 
         <LayoutGroup id="bj-table">
           {/* Dealer */}
-          <div className={cn('relative z-[1] flex flex-col items-center', compact ? 'pt-4' : 'pt-7')} style={{ minHeight: compact ? 150 : 196 }}>
+          <div className={cn('relative z-[1] flex flex-col items-center', compact ? 'pt-3' : 'pt-6')} style={{ minHeight: compact ? 150 : 190 }}>
             <div className="mb-2 flex h-6 items-center">
               {view && view.dealer.cards.length ? (
                 <TotalPill
@@ -207,11 +243,12 @@ export function BlackjackTable({
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/25">Dealer</span>
               )}
             </div>
-            {view ? <CardFan roundId={roundId} cards={view.dealer.cards} size={dealerSize} seen={seen} dim={settled && view.net > 0 && !view.dealer.blackjack} /> : null}
+            {view ? <CardFan roundId={roundId} cards={view.dealer.cards} size={dealerSize} seen={seen} /> : null}
           </div>
 
           {/* Middle: result / insurance note */}
-          <div className="relative z-[2] flex min-h-[64px] flex-1 items-center justify-center px-4">
+          <div className="relative z-[2] flex flex-1 items-center justify-center px-4" style={{ minHeight: compact ? 92 : 124 }}>
+            <FeltPrint config={config} faded={settled || view?.status === 'INSURANCE_OFFERED'} />
             <AnimatePresence mode="wait">
               {view && settled ? <RoundResult key={`res-${view.id}`} view={view} /> : null}
               {view && view.status === 'INSURANCE_OFFERED' && view.legal.length ? (

@@ -11,12 +11,15 @@ import { Dropdown, DropdownItem, DropdownLabel, DropdownSeparator } from '@/comp
 import { useMe } from '@/hooks/use-me';
 import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { formatCredits, formatDate, formatDuration } from '@/lib/format';
+import { formatCredits, formatDuration } from '@/lib/format';
 import { TIER_LABEL } from '@/lib/levels';
 import { MUTE_PRESETS } from '@/server/services/chat/types';
 import { ModerationDialog, useChatActions, type ModDialogSpec, type ModTarget } from '@/components/chat/moderation';
 import { useChatStore } from '@/components/chat/chat-store';
 import { usePublicProfile, type PublicProfile } from './use-profile';
+
+const monthYear = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' });
+export const formatMonthYear = (iso: string) => monthYear.format(new Date(iso));
 
 const ROLE_RANK = { USER: 0, MODERATOR: 1, ADMIN: 2, SUPER_ADMIN: 3 } as const;
 
@@ -70,7 +73,7 @@ export function PlayerCardView({
         <div className="mx-3 mb-3 overflow-hidden rounded-lg border border-line bg-surface-2">
           <div className="grid grid-cols-3 divide-x divide-line">
             <MiniStat label="Games" value={formatCredits(stats.gamesPlayed ?? 0)} />
-            <MiniStat label="Joined" value={stats.joinedAt ? formatDate(stats.joinedAt) : '—'} />
+            <MiniStat label="Joined" value={stats.joinedAt ? formatMonthYear(stats.joinedAt) : '—'} />
             {privacy === 'PUBLIC' ? (
               <MiniStat label="Best win" value={stats.largestWin ? formatCredits(stats.largestWin.amount, { compact: true }) : '—'} hidden={winHidden} />
             ) : (

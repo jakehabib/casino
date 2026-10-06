@@ -237,9 +237,12 @@ export function ChatPanel({ variant = 'panel', onClose }: { variant?: 'panel' | 
             <EmptyState icon={<MessageSquare size={18} />} title="It’s quiet in here" body={status?.canSend ? 'Say hello — be the first to start the conversation.' : 'Messages from players will appear here.'} className="h-full" />
           ) : (
             <ChatRowContext.Provider value={ctx}>
-              {visible.map((m, i) => (
-                <MessageRow key={m.id} m={m} grouped={isGrouped(visible[i - 1], m)} mentionsMe={isMentioned(m, viewer.id)} highlight={highlight === m.id} />
-              ))}
+              {/* Short conversations sit at the bottom, next to the composer. */}
+              <div className="flex min-h-full flex-col justify-end">
+                {visible.map((m, i) => (
+                  <MessageRow key={m.id} m={m} grouped={isGrouped(visible[i - 1], m)} mentionsMe={isMentioned(m, viewer.id)} highlight={highlight === m.id} />
+                ))}
+              </div>
             </ChatRowContext.Provider>
           )}
         </div>

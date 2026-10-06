@@ -34,7 +34,7 @@ export function EmojiPicker({ onPick, disabled }: { onPick: (e: string) => void;
         </button>
       }
     >
-      <div className="max-h-[260px] overflow-y-auto pr-0.5" data-testid="emoji-picker">
+      <div className="max-h-[min(340px,50dvh)] overflow-y-auto pr-0.5" data-testid="emoji-picker">
         {EMOJI_GROUPS.map((g) => (
           <div key={g.label} className="mb-1.5 last:mb-0">
             <div className="px-1 pb-1 pt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-fg-subtle">{g.label}</div>

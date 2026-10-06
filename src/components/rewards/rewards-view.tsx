@@ -251,7 +251,7 @@ function Milestones({ r, me, claim, paused }: { r: RewardStatus; me: Me; claim: 
                   <CreditIcon size={15} /> {formatCredits(l.amount)}
                 </div>
                 <div className="mt-0.5 text-xs text-fg-subtle">
-                  {l.claimed ? 'Claimed' : blocked ? 'Paused during your break' : l.reached ? 'Reached — claim your reward' : `Unlocks at level ${l.level}`}
+                  {l.claimed ? 'Claimed' : blocked ? 'Paused during your break' : l.reached ? 'Ready to claim' : `Unlocks at level ${l.level}`}
                 </div>
               </div>
               {ready ? (

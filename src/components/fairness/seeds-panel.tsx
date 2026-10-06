@@ -94,7 +94,7 @@ export function SeedsPanel() {
             Next nonce <span className="font-semibold text-fg" data-testid="active-nonce">{s.active.nonce}</span>
           </span>
         </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
           <div>
             <div className="mb-1.5 text-xs font-medium text-fg-subtle">Server seed hash (SHA-256 commitment)</div>
             <Mono value={s.active.seedHash} label="Server seed hash" testId="active-hash" />
@@ -138,7 +138,7 @@ export function SeedsPanel() {
           <h3 className="flex items-center gap-2 text-[13px] font-semibold text-fg">
             <ShieldCheck size={15} className="text-win" /> Previous server seed revealed
           </h3>
-          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <div className="mt-3 grid gap-3 lg:grid-cols-2 [&>*]:min-w-0">
             <div>
               <div className="mb-1 text-[11px] text-fg-subtle">Server seed</div>
               <Mono value={lastReveal.serverSeed} label="Server seed" />

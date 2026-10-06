@@ -4,6 +4,7 @@ import { MessageSquare, Users } from 'lucide-react';
 import { useMe } from '@/hooks/use-me';
 import { usePresence } from '@/hooks/use-socket';
 import { useUi } from '@/stores/ui-store';
+import { useChatUnread } from '@/components/chat/chat-store';
 import { BalanceDisplay } from '@/components/ui/balance-display';
 import { IconButton, Button } from '@/components/ui/button';
 import { LogoMark } from '@/components/brand/logo';
@@ -33,6 +34,7 @@ export function TopBar() {
   const { data: me, isLoading } = useMe();
   const chatOpen = useUi((s) => s.chatOpen);
   const toggleChat = useUi((s) => s.toggleChat);
+  const unread = useChatUnread().count;
   return (
     <header className="sticky top-0 z-[var(--z-header)] flex h-14 items-center gap-2 border-b border-line-soft bg-bg/85 px-3 backdrop-blur-xl sm:h-16 sm:gap-3 sm:px-5">
       <Link href="/" className="lg:hidden" aria-label="NOVA home">
@@ -53,7 +55,7 @@ export function TopBar() {
             <RewardsPopover compact={false} />
             <NotificationsPopover unread={me.unreadNotifications} />
             <AccountMenu me={me} />
-            <IconButton label={chatOpen ? 'Hide chat' : 'Show chat'} tone={chatOpen ? 'active' : 'filled'} onClick={toggleChat} className="hidden xl:inline-flex">
+            <IconButton label={chatOpen ? 'Hide chat' : 'Show chat'} tone={chatOpen ? 'active' : 'filled'} onClick={toggleChat} badge={chatOpen ? undefined : unread} className="hidden xl:inline-flex">
               <MessageSquare size={17} />
             </IconButton>
           </>
@@ -65,7 +67,7 @@ export function TopBar() {
             <Link href="/register">
               <Button size="sm">Create account</Button>
             </Link>
-            <IconButton label={chatOpen ? 'Hide chat' : 'Show chat'} tone={chatOpen ? 'active' : 'filled'} onClick={toggleChat} className="hidden xl:inline-flex">
+            <IconButton label={chatOpen ? 'Hide chat' : 'Show chat'} tone={chatOpen ? 'active' : 'filled'} onClick={toggleChat} badge={chatOpen ? undefined : unread} className="hidden xl:inline-flex">
               <MessageSquare size={17} />
             </IconButton>
           </>
