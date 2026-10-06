@@ -113,8 +113,9 @@ export function buildFrames(prev: RoundView | null, next: RoundView, opts: { ins
   let hole = prevHole;
   const isNewRound = !same;
 
-  // Structural change first (split hands, doubled bet) with no new cards.
-  frames.push({ view: project(next, visible, hole), delay: 0 });
+  // Structural change first (new round, split hands, doubled bet) with no new cards.
+  const structural = !same || prev.hands.length !== next.hands.length || prev.totalWagered !== next.totalWagered;
+  if (structural) frames.push({ view: project(next, visible, hole), delay: 0 });
 
   // The hole card turns over before the dealer's first drawn card (or once
   // every card of this step has landed when the dealer does not draw).
@@ -129,7 +130,15 @@ export function buildFrames(prev: RoundView | null, next: RoundView, opts: { ins
       lastWasDealer = true;
     }
     visible.add(c.i);
-    const delay = isNewRound ? (idx === 0 ? 60 : PACE.deal) : c.to === 'D' && c.slot >= 2 ? PACE.dealer : idx === 0 && !lastWasDealer ? 0 : PACE.draw;
+    const delay = isNewRound
+      ? idx === 0
+        ? 120
+        : PACE.deal
+      : c.to === 'D' && c.slot >= 2
+        ? PACE.dealer
+        : idx === 0 && !structural && !lastWasDealer
+          ? 0
+          : PACE.draw;
     frames.push({ view: project(next, visible, hole), delay, sound: 'cardDeal' });
     lastWasDealer = c.to === 'D';
   });
@@ -139,7 +148,5 @@ export function buildFrames(prev: RoundView | null, next: RoundView, opts: { ins
   }
 
   frames.push({ ...final, delay: next.settled ? PACE.result : 120 });
-  // Drop a leading no-op frame (identical to what is already shown).
-  if (frames.length > 1 && frames[0].delay === 0 && frames[1].delay === 0) frames.shift();
   return frames;
 }

@@ -4,7 +4,7 @@ import { CHAT_MAX_LENGTH, chatLength, collapseRuns, sanitizeChatText, validateCh
 describe('sanitizeChatText', () => {
   it('trims and collapses all whitespace (incl. newlines/tabs) to single spaces', () => {
     expect(sanitizeChatText('  hello \n\n  world\t!  ')).toBe('hello world !');
-    expect(sanitizeChatText('a b c')).toBe('a b c');
+    expect(sanitizeChatText('a\u2028b\u2029c')).toBe('a b c');
   });
 
   it('strips control characters', () => {
@@ -13,22 +13,24 @@ describe('sanitizeChatText', () => {
   });
 
   it('strips zero-width, bidi-override and filler characters', () => {
-    expect(sanitizeChatText('ad​min')).toBe('admin');
-    expect(sanitizeChatText('﻿hi⁠')).toBe('hi');
-    expect(sanitizeChatText('abc‮dcba')).toBe('abcdcba');
-    expect(sanitizeChatText('ㅤㅤ')).toBe('');
-    expect(sanitizeChatText('so­ft')).toBe('soft');
+    expect(sanitizeChatText('ad\u200bmin')).toBe('admin');
+    expect(sanitizeChatText('\ufeffhi\u2060')).toBe('hi');
+    expect(sanitizeChatText('abc\u202edcba')).toBe('abcdcba');
+    expect(sanitizeChatText('\u3164\u3164')).toBe('');
+    expect(sanitizeChatText('so\u00adft')).toBe('soft');
   });
 
   it('keeps zero-width joiners only inside emoji sequences', () => {
-    const family = '\u{1F468}‍\u{1F469}‍\u{1F467}';
+    const family = '\u{1F468}\u200d\u{1F469}\u200d\u{1F467}';
     expect(sanitizeChatText(family)).toBe(family);
-    expect(sanitizeChatText('f‍uck')).toBe('fuck');
+    expect(sanitizeChatText('f\u200duck')).toBe('fuck');
   });
 
   it('caps combining-mark stacks (zalgo)', () => {
-    const zalgo = 'á̂̃̄̅';
-    expect(sanitizeChatText(zalgo)).toBe('á̂'.normalize('NFC'));
+    const zalgo = 'a' + '\u0301\u0302\u0303\u0304\u0305\u0306\u0307'.repeat(4);
+    const marks = (t: string) => [...t.normalize('NFD')].filter((c) => /\p{M}/u.test(c)).length;
+    expect(marks(zalgo)).toBe(28);
+    expect(marks(sanitizeChatText(zalgo))).toBeLessThanOrEqual(3);
   });
 
   it('collapses very long character runs', () => {
@@ -36,7 +38,7 @@ describe('sanitizeChatText', () => {
     expect(sanitizeChatText('!!!!!!!!!!!!!!')).toBe('!!!!!!');
   });
 
-  it('never alters HTML — it is stored as inert text', () => {
+  it('never alters HTML \u2014 it is stored as inert text', () => {
     expect(sanitizeChatText('<script>alert(1)</script>')).toBe('<script>alert(1)</script>');
   });
 });
@@ -45,7 +47,7 @@ describe('validateChatText', () => {
   it('rejects empty / whitespace-only / invisible-only messages', () => {
     expect(validateChatText('')).toMatchObject({ ok: false, error: 'EMPTY' });
     expect(validateChatText('   \n\t ')).toMatchObject({ ok: false, error: 'EMPTY' });
-    expect(validateChatText('​​﻿')).toMatchObject({ ok: false, error: 'EMPTY' });
+    expect(validateChatText('\u200b\u200b\ufeff')).toMatchObject({ ok: false, error: 'EMPTY' });
   });
 
   it(`enforces the ${CHAT_MAX_LENGTH} character limit in code points`, () => {
