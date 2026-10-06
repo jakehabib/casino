@@ -212,7 +212,11 @@ export async function getSlotState(userId: string | null, slotId: string): Promi
 // Spin
 // ─────────────────────────────────────────────────────────────
 
-export async function spinSlot(userId: string, slotId: string, input: { betLevel: number; requestId: string }): Promise<SlotSpinResponse> {
+export async function spinSlot(
+  userId: string,
+  slotId: string,
+  input: { betLevel: number; requestId: string; mode?: 'paid' | 'free' },
+): Promise<SlotSpinResponse> {
   const def = requireDef(slotId);
   const post = new PostCommit();
 
@@ -238,6 +242,12 @@ export async function spinSlot(userId: string, slotId: string, input: { betLevel
     const isFree = stored !== null;
     let betLevel: number;
     let charged = 0n;
+
+    if (!stored && input.mode === 'free') {
+      // The client expected a free spin but the bonus already ended (e.g. finished
+      // in another tab). Never silently convert that click into a paid spin.
+      throw new AppError('CONFLICT', 'Your free spins have already finished.', { bonusEnded: true });
+    }
 
     if (stored) {
       // Free spin: no wager, but cooldown / self-exclusion / maintenance /

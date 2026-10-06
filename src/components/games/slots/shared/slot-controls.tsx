@@ -80,7 +80,7 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
   return (
     <div className="@container surface-panel rounded-xl px-3 py-3 sm:px-4" data-testid="slot-controls">
       {/* Mobile */}
-      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 @min-[720px]:hidden">
+      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 @min-[760px]:hidden">
         <div className="flex items-center justify-between gap-2">
           <AutoplayButton m={m} />
           {spinButton}
@@ -100,7 +100,7 @@ export function SlotControls({ m, spinClassName }: { m: SlotMachineController; s
       </div>
 
       {/* Tablet / desktop */}
-      <div className="hidden items-center gap-4 @min-[720px]:flex">
+      <div className="hidden items-center gap-4 @min-[760px]:flex">
         <div className="flex min-w-0 flex-1 items-center gap-4 lg:gap-6">
           <Readout label="Balance" value={balance} icon />
           <Readout label="Last win" value={m.lastWin} tone={m.lastWin > 0 ? 'win' : 'muted'} />

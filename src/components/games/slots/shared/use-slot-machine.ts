@@ -6,6 +6,7 @@ import { api, ApiError, requestId } from '@/lib/api';
 import { playSound } from '@/audio/audio-manager';
 import { useBalance } from '@/stores/balance-store';
 import { useGameErrorHandler } from '@/components/games/shared/use-game-action';
+import { toast } from '@/components/ui/toast';
 import type { GridTransform, Grid, Pos, SpinOutcome, SpinWin } from '@/engines/slots/types';
 import type { PublicBonus, PublicSlotDefinition, ReelColumn, SlotSpinResponse, SlotStateResponse } from './types';
 import { posKey } from './types';
@@ -409,7 +410,7 @@ export function useSlotMachine(slotId: string) {
 
     let res: SlotSpinResponse;
     try {
-      const body = { betLevel: level, requestId: rid };
+      const body = { betLevel: level, requestId: rid, mode: free ? ('free' as const) : ('paid' as const) };
       const url = `/api/games/slots/${slotId}/spin`;
       try {
         res = await api.post<SlotSpinResponse>(url, body);
@@ -425,6 +426,15 @@ export function useSlotMachine(slotId: string) {
       setAnticipation(new Array(d.reels).fill(false));
       setFsCurrent(null);
       setPhase('idle');
+      if (e instanceof ApiError && e.code === 'CONFLICT' && e.details?.bonusEnded) {
+        // The bonus finished elsewhere (another tab): drop the stale bonus UI, charge nothing.
+        useBalance.getState().release();
+        setBonus(null);
+        bonusRef.current = null;
+        toast.info('Free spins finished', 'This bonus was completed in another window. Your winnings are in your balance.');
+        void qc.invalidateQueries({ queryKey: ['slot-state', slotId] });
+        return false;
+      }
       onError(e);
       if (e instanceof ApiError && ['COOLDOWN_ACTIVE', 'SELF_EXCLUDED', 'GAME_DISABLED', 'MAINTENANCE'].includes(e.code)) {
         void qc.invalidateQueries({ queryKey: ['slot-state', slotId] });
