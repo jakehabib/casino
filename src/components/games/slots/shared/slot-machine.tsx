@@ -28,7 +28,7 @@ import type { SlotTheme } from './types';
 export function SlotStage({
   m,
   theme,
-  maxReelHeight = 'min(calc(100dvh - 430px), 520px)',
+  maxReelHeight = 'min(max(300px, calc(100dvh - 440px)), 520px)',
   header,
   className,
 }: {
