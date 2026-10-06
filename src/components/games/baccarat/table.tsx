@@ -55,9 +55,10 @@ export function BaccaratTable({ c }: { c: BaccaratController }) {
   return (
     <div
       ref={ref}
-      className="felt noise relative overflow-hidden rounded-xl border border-felt-line/60 shadow-[inset_0_1px_0_rgb(255_255_255/0.05),inset_0_-40px_80px_-40px_rgb(0_0_0/0.6)]"
+      className="felt relative overflow-hidden rounded-xl border border-felt-line/70 shadow-[inset_0_1px_0_rgb(255_255_255/0.06),inset_0_-40px_80px_-40px_rgb(0_0_0/0.6),var(--shadow-2)]"
       data-testid="bac-table"
     >
+      <div aria-hidden className="noise pointer-events-none absolute inset-0 opacity-70" />
       <TablePrint commissionBps={cfg?.bankerCommissionBps ?? 500} tiePayout={cfg?.tiePayout ?? 8} />
 
       {/* Top rail: shoe status + shoe */}
@@ -196,7 +197,6 @@ function TablePrint({ commissionBps, tiePayout }: { commissionBps: number; tiePa
       </defs>
       <rect width="1000" height="600" fill="url(#bac-vignette)" />
       <path d="M -40 330 Q 500 520 1040 330" fill="none" stroke="#ffffff" strokeOpacity="0.06" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-      <text x="500" y="20" fill="none" />
       <title>{`Banker pays 1:1 less ${pct}% commission · Tie pays ${tiePayout}:1`}</title>
     </svg>
   );

@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { Undo2, X, RotateCcw } from 'lucide-react';
 import { ChipSelector } from '@/components/ui/chip-selector';
 import { CreditIcon } from '@/components/ui/credit-icon';
@@ -14,12 +15,30 @@ import { SIDE_TONE } from './theme';
 
 const ORDER: ZoneKey[] = ['PLAYER', 'BANKER', 'TIE'];
 
+/** 7 chips must fit the 320px desktop panel; phones get bigger tap targets. */
+function useChipSize() {
+  const [size, setSize] = useState(36);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const update = () => setSize(mq.matches ? 35 : window.innerWidth >= 400 ? 44 : 40);
+    update();
+    mq.addEventListener('change', update);
+    window.addEventListener('resize', update);
+    return () => {
+      mq.removeEventListener('change', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+  return size;
+}
+
 export function BaccaratControls({ c }: { c: BaccaratController }) {
   const { cfg, phase, bets, staked, pending } = c;
   const locked = phase === 'dealing' || pending;
   const settled = phase === 'result' && c.result ? c.result : null;
   const showBets = settled ? Object.fromEntries(settled.bets.map((b) => [b.type, b.amount])) as Record<ZoneKey, number | undefined> : bets;
   const totalShown = settled ? settled.totalWagered : staked;
+  const chipSize = useChipSize();
 
   return (
     <ControlsPanel className="gap-3.5 sm:gap-4">
@@ -32,7 +51,7 @@ export function BaccaratControls({ c }: { c: BaccaratController }) {
             </span>
           ) : null}
         </div>
-        <ChipSelector value={c.chip} onChange={c.setChip} size={42} className="-mx-1 px-1" />
+        <ChipSelector value={c.chip} onChange={c.setChip} size={chipSize} className="-mx-1 justify-between px-1" disabledAbove={c.balance ?? undefined} />
       </div>
 
       <div className="grid grid-cols-4 gap-1.5">

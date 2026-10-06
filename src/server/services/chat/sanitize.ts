@@ -15,7 +15,7 @@ export const MAX_CHAR_RUN = 6;
 const CONTROL = /[\u0000-\u001F\u007F-\u009F]/g;
 // Zero-width, joiners, bidi overrides/isolates, soft hyphen, filler characters.
 const INVISIBLE =
-  /[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0E\uFEFF\uFFA0\uFFF9-\uFFFB]/g;
+  /[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B\u200C\u200E\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0E\uFEFF\uFFA0\uFFF9-\uFFFB]/g;
 // "Zalgo" stacks: more than two combining marks on one base character.
 const MARK_STACK = /(\p{M}{2})\p{M}+/gu;
 const WS = /\s+/gu;

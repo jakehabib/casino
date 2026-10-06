@@ -13,7 +13,7 @@ export function BaccaratRoundDetail({ detail }: { detail: RoundDetail<BaccaratRo
   const tone = SIDE_TONE[d.outcome];
   return (
     <div className="space-y-4">
-      <div className="felt noise overflow-hidden rounded-xl border border-felt-line/60 p-4">
+      <div className="felt relative overflow-hidden rounded-xl border border-felt-line/60 p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
             Shoe {d.shoeNumber} · Hand {d.shoeRound}
