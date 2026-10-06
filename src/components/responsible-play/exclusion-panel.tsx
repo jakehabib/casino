@@ -186,8 +186,8 @@ function OptionCard({ option, onSelect, extendLabel }: { option: ExclusionOption
       data-testid={`option-${option.type}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-fg-subtle">{isSelf ? 'Self-exclusion' : option.type === 'LOCK_1W' ? 'Cooldown' : 'Break'}</span>
-        <span className="tabular rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-fg-muted">{option.duration}</span>
+        <span className="truncate text-2xs font-semibold uppercase tracking-[0.12em] text-fg-subtle">{isSelf ? 'Self-exclusion' : option.type === 'LOCK_1W' ? 'Cooldown' : 'Break'}</span>
+        <span className="tabular shrink-0 whitespace-nowrap rounded bg-surface-3 px-1.5 py-0.5 text-[11px] font-medium text-fg-muted">{option.duration}</span>
       </div>
       <div className="mt-3 text-[15px] font-semibold tracking-tight text-fg">{extendLabel ? (option.type === 'EXCLUSION_INDEFINITE' ? 'Extend indefinitely' : `Extend to ${option.duration}`) : option.title}</div>
       <p className="mt-1 flex-1 text-[13px] leading-relaxed text-fg-muted">{option.blurb}</p>

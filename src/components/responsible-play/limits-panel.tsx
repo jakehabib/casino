@@ -163,7 +163,7 @@ function LimitCard({ kind, current, pending, delayHours }: { kind: LimitKind; cu
                 !noLimit && parsed === p ? 'border-fg-muted/60 bg-surface-3 text-fg' : 'border-line bg-surface-2 text-fg-muted hover:border-line-strong hover:text-fg',
               )}
             >
-              {formatCredits(p, { compact: true })}
+              {p >= 1000 ? `${p / 1000}K` : p}
             </button>
           ))}
           <button

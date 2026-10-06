@@ -50,27 +50,27 @@ export const gildedVault: SlotDefinition = {
   ],
   weights: {
     base: [
-      { BAR: 34, BELL: 12, DIAMOND: 24, SEVEN: 9, CROWN: 6, VAULT: 3 },
+      { BAR: 34, BELL: 12, DIAMOND: 24, SEVEN: 9, CROWN: 6, VAULT: 2 },
       { BAR: 12, BELL: 34, DIAMOND: 9, SEVEN: 22, CROWN: 6, WILD: 3, VAULT: 3 },
       { BAR: 30, BELL: 14, DIAMOND: 24, SEVEN: 9, CROWN: 8, WILD: 3, VAULT: 3 },
       { BAR: 14, BELL: 30, DIAMOND: 10, SEVEN: 22, CROWN: 6, WILD: 3, VAULT: 3 },
-      { BAR: 30, BELL: 16, DIAMOND: 22, SEVEN: 10, CROWN: 8, VAULT: 3 },
+      { BAR: 30, BELL: 16, DIAMOND: 22, SEVEN: 10, CROWN: 8, VAULT: 2 },
     ],
     free: [
       { BAR: 34, BELL: 12, DIAMOND: 24, SEVEN: 9, CROWN: 6, VAULT: 2 },
-      { BAR: 12, BELL: 34, DIAMOND: 9, SEVEN: 22, CROWN: 6, WILD: 7, VAULT: 2 },
-      { BAR: 30, BELL: 14, DIAMOND: 24, SEVEN: 9, CROWN: 8, WILD: 7, VAULT: 2 },
-      { BAR: 14, BELL: 30, DIAMOND: 10, SEVEN: 22, CROWN: 6, WILD: 7, VAULT: 2 },
+      { BAR: 12, BELL: 34, DIAMOND: 9, SEVEN: 22, CROWN: 6, WILD: 12, VAULT: 2 },
+      { BAR: 30, BELL: 14, DIAMOND: 24, SEVEN: 9, CROWN: 8, WILD: 12, VAULT: 2 },
+      { BAR: 14, BELL: 30, DIAMOND: 10, SEVEN: 22, CROWN: 6, WILD: 12, VAULT: 2 },
       { BAR: 30, BELL: 16, DIAMOND: 22, SEVEN: 10, CROWN: 8, VAULT: 2 },
     ],
   },
   // hundredths of TOTAL bet, per line
   paytable: {
-    BAR: { 3: 15, 4: 50, 5: 150 },
-    BELL: { 3: 20, 4: 60, 5: 200 },
-    DIAMOND: { 3: 40, 4: 120, 5: 400 },
-    SEVEN: { 3: 60, 4: 200, 5: 750 },
-    CROWN: { 3: 100, 4: 400, 5: 1500 },
+    BAR: { 3: 23, 4: 65, 5: 230 },
+    BELL: { 3: 28, 4: 80, 5: 275 },
+    DIAMOND: { 3: 50, 4: 160, 5: 550 },
+    SEVEN: { 3: 85, 4: 275, 5: 1100 },
+    CROWN: { 3: 140, 4: 550, 5: 2300 },
   },
   wildRules: { symbols: ['WILD'], expand: 'free-spins' },
   scatterRules: {
