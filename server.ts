@@ -10,7 +10,7 @@ import { logger } from '@/server/logger';
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev, port, hostname: process.env.HOSTNAME || '0.0.0.0' });
+const app = next({ dev, port, hostname: '0.0.0.0' });
 const handle = app.getRequestHandler();
 
 async function main() {
