@@ -68,8 +68,8 @@ export const RewardsConfig = z.object({
   refillAmount: z.number().int().nonnegative().default(10_000),
   refillThreshold: z.number().int().nonnegative().default(1_000),
   refillCooldownMinutes: z.number().int().min(1).default(60),
-  weeklyAmount: z.number().int().nonnegative().default(100_000),
-  weeklyMinWagered: z.number().int().nonnegative().default(50_000),
+  weeklyAmount: z.number().int().nonnegative().default(25_000),
+  weeklyMinWagered: z.number().int().nonnegative().default(250_000),
   signupGrant: z.number().int().nonnegative().default(100_000),
 });
 

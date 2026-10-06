@@ -464,7 +464,7 @@ function SecuritySection() {
     <Card
       id="security"
       title="Security"
-      sub="Change the password you use to sign in."
+      sub="Change the password you use to sign in. Other devices will be signed out."
       footer={
         <Button size="sm" loading={m.isPending} disabled={!current || !next || !confirm} onClick={submit}>
           Update password

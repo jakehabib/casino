@@ -16,6 +16,7 @@ import { BigWinOverlay, WinTicker } from '../shared/win-counter';
 import { FeatureBanner, FreeSpinsOverlay } from '../shared/free-spins-overlay';
 import { SlotControls } from '../shared/slot-controls';
 import { SlotPaytable } from '../shared/paytable';
+import { savedBonusNote } from '../shared/slot-machine';
 import type { PublicBonus } from '../shared/types';
 import { OverchargeDefs } from './symbols';
 import { OC_AMBER, OC_CYAN, OverchargeBackground, OverchargeLogo, overchargeTheme as theme } from './theme';
@@ -284,6 +285,7 @@ export default function OverchargeMachine() {
         rules={m.def ? <SlotPaytable def={m.def} theme={theme} betLevel={m.bonus?.betLevel ?? m.betLevel} /> : <Skeleton className="h-64 w-full" />}
         stage={stage}
         controls={m.def && m.enabled ? <SlotControls m={m} /> : null}
+        blockedNote={savedBonusNote(m, TITLE)}
       />
     </>
   );

@@ -76,7 +76,18 @@ export function useBlackjack() {
     for (const t of timers.current) window.clearTimeout(t);
     timers.current = [];
   };
-  useEffect(() => clearTimers, []);
+  useEffect(
+    () => () => {
+      clearTimers();
+      // Leaving mid-reveal: the cleared timers would never release the held
+      // balance, leaving the header stuck below server truth.
+      if (releaseOnFinal.current) {
+        releaseOnFinal.current = false;
+        useBalance.getState().release();
+      }
+    },
+    [],
+  );
 
   const present = useCallback(
     (next: RoundView, opts: { instant?: boolean } = {}) => {

@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronDown, ShieldCheck } from 'lucide-react';
 import type { RoundDetail } from '@/lib/round-detail';
 import type { SlotRoundData } from '@/server/services/slots/slot-service';
 import type { SpinOutcome, SpinWin } from '@/engines/slots/types';
@@ -9,6 +10,7 @@ import { toPublicDefinition, type PublicSymbol } from '@/engines/slots/public';
 import { formatCredits } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { CreditIcon } from '@/components/ui/credit-icon';
+import { verifyHref } from '@/components/fairness/verify-link';
 import { GenericSymbol, genericSymbolColor } from './shared/generic-symbols';
 
 /**
@@ -29,6 +31,19 @@ export function SlotRoundDetail({ detail }: { detail: RoundDetail<SlotRoundData>
   const visibleFree = showAll ? free : free.slice(0, 6);
   const symIndex = new Map(def.symbols.map((s, i) => [s.id, i]));
   const symbols = def.symbols;
+  // Every free spin has its own nonce (and bonus state), so each gets its own verifier link.
+  // The revealed server seed applies to spins made with the same seed pair as the trigger.
+  const verifyFor = (s: SlotRoundData['spins'][number]) =>
+    verifyHref({
+      game: 'slots',
+      serverSeed: detail.fairness && detail.fairness.serverSeedHash === s.serverSeedHash ? (detail.fairness.serverSeed ?? undefined) : undefined,
+      seedHash: s.serverSeedHash,
+      clientSeed: s.clientSeed,
+      nonce: String(s.nonce),
+      slotId: data.slotId,
+      betLevel: String(data.betLevel),
+      bonusState: JSON.stringify(s.bonusStateBefore),
+    });
 
   return (
     <div className="space-y-4" data-testid="slot-round-detail">
@@ -55,6 +70,7 @@ export function SlotRoundDetail({ detail }: { detail: RoundDetail<SlotRoundData>
                 symbols={symbols}
                 symIndex={symIndex}
                 nonce={s.nonce}
+                verify={verifyFor(s)}
               />
             ))}
           </div>
@@ -91,6 +107,7 @@ function SpinCard({
   symbols,
   symIndex,
   nonce,
+  verify,
   large,
 }: {
   title: string;
@@ -99,6 +116,8 @@ function SpinCard({
   symbols: PublicSymbol[];
   symIndex: Map<string, number>;
   nonce: number;
+  /** Verifier link for this spin. */
+  verify?: string;
   large?: boolean;
 }) {
   const step0 = outcome.steps[0];
@@ -113,7 +132,14 @@ function SpinCard({
       <div className="mb-2 flex items-center justify-between gap-2 text-[12px]">
         <span className="font-semibold text-fg">{title}</span>
         <span className="flex items-center gap-2">
-          <span className="tabular text-fg-subtle">nonce {nonce}</span>
+          {verify ? (
+            <Link href={verify} className="tabular flex items-center gap-1 text-fg-subtle underline-offset-2 hover:text-fg hover:underline" title="Verify this spin" data-testid="slot-spin-verify">
+              <ShieldCheck size={12} />
+              nonce {nonce}
+            </Link>
+          ) : (
+            <span className="tabular text-fg-subtle">nonce {nonce}</span>
+          )}
           <span className={cn('tabular flex items-center gap-1 font-semibold', payout > 0 ? 'text-win' : 'text-fg-muted')}>
             <CreditIcon size={12} />
             {payout > 0 ? `+${formatCredits(payout)}` : '0'}

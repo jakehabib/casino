@@ -143,7 +143,7 @@ export function PublicProfileView({ username }: { username: string }) {
                 <section>
                   <SectionTitle title="Highlights" />
                   <div className="grid grid-cols-2 gap-2.5 @2xl:grid-cols-4">
-                    <StatCard label="Blackjack hands" value={n(s.highlights.blackjackHands)} sub={`${n(s.highlights.blackjacks)} blackjacks`} />
+                    <StatCard label="Blackjack hands" value={n(s.highlights.blackjackHands)} sub={`${n(s.highlights.blackjacks)} ${s.highlights.blackjacks === 1 ? 'blackjack' : 'blackjacks'}`} />
                     <StatCard label="Baccarat hands" value={n(s.highlights.baccaratHands)} />
                     <StatCard label="Roulette spins" value={n(s.highlights.rouletteSpins)} />
                     <StatCard label="Launch rounds" value={n(s.highlights.crashRounds)} sub={s.highlights.crashHighestCashout ? `Best ${formatMultiplier(s.highlights.crashHighestCashout)}` : undefined} />

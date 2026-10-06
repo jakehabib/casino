@@ -115,7 +115,7 @@ export function ActionBar({
     content = (
       <Row key="idle" id="idle">
         <div className="hidden h-12 flex-1 items-center justify-center text-[13px] text-white/45 lg:flex">
-          {revealing ? 'Dealing…' : hasPrevious ? 'Press Space to rebet' : 'Place your bet · press Space to deal'}
+          {revealing ? 'Dealing…' : !canDeal && !busy ? null : hasPrevious ? 'Press Space to rebet' : 'Place your bet · press Space to deal'}
         </div>
         <div className="flex flex-1 gap-2 lg:hidden">
           {hasPrevious ? (

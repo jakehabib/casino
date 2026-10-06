@@ -87,8 +87,12 @@ export function useRouletteTable(state: RouletteState | undefined) {
 
   useEffect(() => {
     if (!hydrated.current) return;
+    // A slip that is spinning has already been wagered: it must not come back
+    // as an unplaced draft if the page is refreshed mid-spin (re-spinning it
+    // would stake it twice). A failed spin returns to 'idle' and re-saves it.
+    if (phase === 'spinning') return writeSession(DRAFT_KEY, null);
     writeSession(DRAFT_KEY, Object.keys(bets).length ? bets : null);
-  }, [bets]);
+  }, [bets, phase]);
 
   const limits = state?.limits;
   const betLimits = state?.betLimits;

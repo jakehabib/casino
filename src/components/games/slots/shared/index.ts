@@ -11,5 +11,5 @@ export { FreeSpinsOverlay, FeatureBanner } from './free-spins-overlay';
 export { SlotControls } from './slot-controls';
 export { SlotPaytable } from './paytable';
 export { BonusHud, MultiplierLadder } from './bonus-hud';
-export { SlotMachine, SlotMachineView, SlotStage } from './slot-machine';
+export { SlotMachine, SlotMachineView, SlotStage, savedBonusNote } from './slot-machine';
 export { GenericSymbol, createGenericTheme, genericSymbolColor } from './generic-symbols';

@@ -44,7 +44,12 @@ export function BaccaratRoundDetail({ detail }: { detail: RoundDetail<BaccaratRo
                 </div>
                 <div className="flex items-center">
                   {cards.map((c, i) => (
-                    <div key={i} className="flex items-center justify-center" style={i === 2 ? { width: 80, height: 80, marginLeft: -6 } : { marginLeft: i ? -10 : 0 }}>
+                    // Tighter overlap on phones so a three-card hand stays inside its half (≈150px at 390px).
+                    <div
+                      key={i}
+                      className={cn('flex shrink-0 items-center justify-center', i === 1 && '-ml-6 sm:-ml-2.5', i === 2 && '-ml-[22px] sm:-ml-1.5')}
+                      style={i === 2 ? { width: 80, height: 80 } : undefined}
+                    >
                       <PlayingCard code={c} size="sm" style={i === 2 ? { transform: 'rotate(90deg)' } : undefined} dim={d.outcome !== 'TIE' && !won} />
                     </div>
                   ))}

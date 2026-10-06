@@ -12,6 +12,7 @@ import {
   ReelGrid,
   SlotControls,
   SlotPaytable,
+  savedBonusNote,
   WinTicker,
   useSlotMachine,
   type SlotMachineController,
@@ -177,6 +178,7 @@ export default function StarforgedRelicsMachine() {
         rules={m.def ? <SlotPaytable def={m.def} theme={theme} betLevel={m.bonus?.betLevel ?? m.betLevel} /> : <Skeleton className="h-64 w-full" />}
         stage={stage}
         controls={m.def && m.enabled ? <SlotControls m={m} /> : null}
+        blockedNote={savedBonusNote(m, TITLE)}
       />
     </>
   );

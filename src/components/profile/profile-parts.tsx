@@ -136,7 +136,7 @@ export function FavoriteGameCard({ game, sub }: { game: FavoriteGame | null; sub
       <span className="min-w-0">
         <span className="block text-xs font-medium text-fg-subtle">Favourite game</span>
         <span className="mt-0.5 block truncate text-[15px] font-semibold text-fg group-hover:text-white">{game.name}</span>
-        <span className="block truncate text-xs text-fg-subtle">{sub ?? `${game.plays.toLocaleString('en-US')} rounds played`}</span>
+        <span className="block truncate text-xs text-fg-subtle">{sub ?? `${game.plays.toLocaleString('en-US')} ${game.plays === 1 ? 'round' : 'rounds'} played`}</span>
       </span>
     </Link>
   );

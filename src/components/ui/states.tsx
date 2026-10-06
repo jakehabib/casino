@@ -55,7 +55,7 @@ function useCountdown(until: string | null) {
  * cooldown, self-exclusion, suspension or maintenance. Calm and neutral. No
  * bypass.
  */
-export function PlayDisabled({ code, until, label }: { code: string; until: string | null; label?: string }) {
+export function PlayDisabled({ code, until, label, note }: { code: string; until: string | null; label?: string; /** Extra context, e.g. a saved bonus. */ note?: ReactNode }) {
   const remaining = useCountdown(until);
   const reason =
     code === 'SELF_EXCLUDED'
@@ -82,6 +82,7 @@ export function PlayDisabled({ code, until, label }: { code: string; until: stri
       ) : code === 'SELF_EXCLUDED' ? (
         <p className="mt-2 text-sm text-fg-muted">This exclusion has no end date. Contact support to request a review.</p>
       ) : null}
+      {note ? <div className="mt-4 w-full rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-fg-muted">{note}</div> : null}
       <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
         <Link href="/history" className="w-full sm:w-auto">
           <Button variant="secondary" block>View history</Button>

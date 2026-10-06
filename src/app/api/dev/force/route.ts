@@ -8,4 +8,4 @@ const Body = z.object({
   value: z.unknown().nullable(),
 });
 
-export const POST = route({ body: Body }, async ({ user, body }) => devSetForced(requireDevUser(user).id, body.game, body.value ?? null));
+export const POST = route({ devOnly: true, body: Body }, async ({ user, body }) => devSetForced(requireDevUser(user).id, body.game, body.value ?? null));

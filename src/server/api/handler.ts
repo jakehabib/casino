@@ -4,7 +4,7 @@ import { AppError, type ApiErrorBody } from '@/lib/errors';
 import { getSessionUser, hasRole, type SessionUser } from '@/server/auth/session';
 import { rateLimit } from '@/server/rate-limit';
 import { logger } from '@/server/logger';
-import { env } from '@/server/env';
+import { env, devToolsEnabled } from '@/server/env';
 import type { Role } from '@prisma/client';
 
 /**
@@ -21,6 +21,8 @@ interface Opts<B extends ZodType | undefined, Q extends ZodType | undefined> {
   body?: B;
   query?: Q;
   rateLimit?: { bucket: string; limit: number; windowSec: number };
+  /** Development-only endpoint: responds 404 before any other processing unless dev tools are enabled. */
+  devOnly?: boolean;
   /** Allow banned/suspended users (e.g. viewing history, RP page). Default true for reads. */
 }
 
@@ -135,6 +137,7 @@ export function route<B extends ZodType | undefined = undefined, Q extends ZodTy
 export function route(opts: Opts<ZodType | undefined, ZodType | undefined>, fn: (ctx: any) => Promise<unknown>) {
   return async (req: NextRequest, routeCtx: { params: Promise<Record<string, string>> }) => {
     try {
+      if (opts.devOnly && !devToolsEnabled()) throw new AppError('NOT_FOUND');
       checkCsrf(req);
       const ip = clientIp(req);
       const user = await getSessionUser();

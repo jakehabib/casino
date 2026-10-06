@@ -7,7 +7,7 @@ const Body = z.discriminatedUnion('op', [
   z.object({ op: z.literal('clear'), requestId: RequestId }),
 ]);
 
-export const POST = route({ body: Body }, async ({ user, body }) => {
+export const POST = route({ devOnly: true, body: Body }, async ({ user, body }) => {
   const u = requireDevUser(user);
   return body.op === 'grant' ? devGrantCredits(u.id, body.amount, body.requestId) : devClearBalance(u.id, body.requestId);
 });

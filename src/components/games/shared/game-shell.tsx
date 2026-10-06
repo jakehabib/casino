@@ -9,6 +9,7 @@ import { PlayDisabled, ConnectionBanner } from '@/components/ui/states';
 import { usePlayStatus } from '@/hooks/use-play-status';
 import { useGamePresence, usePresenceDetail, useConnectionState } from '@/hooks/use-socket';
 import { useAudioPrefs } from '@/audio/use-audio';
+import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export function GameShell({
   controlsPosition = 'left',
   requireAuth = true,
   allowSpectate = false,
+  blockedNote,
 }: {
   gameId: string;
   title: string;
@@ -52,6 +54,8 @@ export function GameShell({
   requireAuth?: boolean;
   /** Crash: guests and locked users may watch the round but not bet. */
   allowSpectate?: boolean;
+  /** Extra copy shown on the play-gate card (e.g. "your free spins are saved"). */
+  blockedNote?: ReactNode;
 }) {
   useGamePresence(gameId);
   const presence = usePresenceDetail();
@@ -82,7 +86,7 @@ export function GameShell({
       </div>
     );
   } else if (blocked && !allowSpectate) {
-    body = <PlayDisabled code={play!.code!} until={play!.until} label={'label' in play! ? (play as { label?: string }).label : undefined} />;
+    body = <PlayDisabled code={play!.code!} until={play!.until} label={'label' in play! ? (play as { label?: string }).label : undefined} note={blockedNote} />;
   } else {
     body = (
       <div className={cn('grid gap-3', controlsPosition === 'left' ? 'lg:grid-cols-[320px_minmax(0,1fr)]' : 'grid-cols-1')}>
@@ -146,8 +150,8 @@ function PlayDisabledCompact({ code, until }: { code: string; until: string | nu
     <div className="rounded-xl border border-line bg-surface-1 p-4 text-sm">
       <div className="font-semibold">Betting disabled</div>
       <div className="mt-1 text-fg-muted">
-        {code === 'COOLDOWN_ACTIVE' || code === 'SELF_EXCLUDED' ? 'Your break is active' : 'Your account cannot place bets'}
-        {until ? ` until ${new Date(until).toLocaleString()}` : ''}. You can still watch.
+        {code === 'COOLDOWN_ACTIVE' ? 'Your break is active' : code === 'SELF_EXCLUDED' ? 'Your self-exclusion is active' : 'Your account cannot place bets'}
+        {until ? ` until ${formatDateTime(until)}` : ''}. You can still watch.
       </div>
       <Link href="/responsible-play" className="mt-2 inline-block text-[13px] font-medium text-accent">Manage account</Link>
     </div>

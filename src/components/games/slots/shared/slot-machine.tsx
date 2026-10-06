@@ -7,6 +7,7 @@ import { ErrorState, EmptyState } from '@/components/ui/states';
 import { ReasonCopy } from '@/lib/errors';
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { formatCredits } from '@/lib/format';
 import { ReelGrid } from './reel-grid';
 import { WinOverlay } from './win-overlay';
 import { BigWinOverlay, WinTicker } from './win-counter';
@@ -190,6 +191,19 @@ export function SlotMachineView({
       rules={m.def ? <SlotPaytable def={m.def} theme={theme} betLevel={m.bonus?.betLevel ?? m.betLevel} /> : <Skeleton className="h-64 w-full" />}
       stage={stage}
       controls={m.def && m.enabled ? <SlotControls m={m} /> : null}
+      blockedNote={savedBonusNote(m, title)}
     />
+  );
+}
+
+/** Play-gate note while a bonus is pending: the free spins are kept, not lost. */
+export function savedBonusNote(m: SlotMachineController, title: string): ReactNode {
+  const b = m.bonus;
+  if (!b) return undefined;
+  return (
+    <span data-testid="slot-bonus-saved">
+      Your <span className="font-semibold text-fg">{b.remaining} free spin{b.remaining === 1 ? '' : 's'}</span> on {title} (bet {formatCredits(b.betLevel)}){' '}
+      {b.remaining === 1 ? 'is' : 'are'} saved and will be waiting here when play resumes.
+    </span>
   );
 }

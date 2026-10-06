@@ -6,9 +6,31 @@ import { verifySlotSpin } from '@/engines/slots/verify';
 import { SLOT_DEFINITIONS, getSlotDefinition } from '@/engines/slots/definitions';
 import type { SlotDefinition, SpinOutcome } from '@/engines/slots/types';
 
+const word4 = (w: string) => w.replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase();
+
+/** 4-letter grid labels, unique per machine ("Star Chalice" / "Star Crown" / "Star Gate" → CHAL / CROW / GATE). */
+const shortCache = new WeakMap<SlotDefinition, Map<string, string>>();
+function shortLabels(def: SlotDefinition): Map<string, string> {
+  const hit = shortCache.get(def);
+  if (hit) return hit;
+  const first = (name: string) => word4(name.split(/\s+/)[0] ?? name);
+  const counts = new Map<string, number>();
+  for (const s of def.symbols) counts.set(first(s.name), (counts.get(first(s.name)) ?? 0) + 1);
+  const out = new Map<string, string>();
+  for (const s of def.symbols) {
+    const words = s.name.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w));
+    let short = first(s.name);
+    if (s.kind === 'wild' && (s.multiplier ?? 1) > 1) short = `W×${s.multiplier}`;
+    else if ((counts.get(short) ?? 0) > 1 && words.length > 1) short = word4(words[words.length - 1]);
+    out.set(s.id, short || s.id.slice(0, 4));
+  }
+  shortCache.set(def, out);
+  return out;
+}
+
 function symbolLabel(def: SlotDefinition, id: string) {
   const s = def.symbols.find((x) => x.id === id);
-  return { short: (s?.name ?? id).replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase() || id.slice(0, 4), name: s?.name ?? id, kind: s?.kind ?? 'regular', tier: s?.tier };
+  return { short: shortLabels(def).get(id) ?? id.slice(0, 4), name: s?.name ?? id, kind: s?.kind ?? 'regular', tier: s?.tier };
 }
 
 function GridView({ def, grid, highlight }: { def: SlotDefinition; grid: string[][]; highlight: Set<string> }) {
