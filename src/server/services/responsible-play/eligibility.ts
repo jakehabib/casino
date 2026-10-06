@@ -59,9 +59,10 @@ function exclusionFailure(ex: SelfExclusion): EligibilityResult {
   return {
     ok: false,
     code,
+    // Locale-neutral copy: the client formats `details.endsAt` in the user's locale.
     message: ex.endsAt
-      ? `${EXCLUSION_OPTIONS[ex.type].label} active until ${ex.endsAt.toISOString()}.`
-      : 'Indefinite self-exclusion active.',
+      ? `Your ${EXCLUSION_OPTIONS[ex.type].label.toLowerCase()} is active. Casino play resumes when it ends.`
+      : 'Your indefinite self-exclusion is active. Contact support to request a review.',
     details: { type: ex.type, label: EXCLUSION_OPTIONS[ex.type].label, endsAt: ex.endsAt?.toISOString() ?? null },
   };
 }
@@ -171,4 +172,26 @@ export async function getPlayStatus(userId: string) {
   }
   if (system.maintenanceMode) return { canPlay: false, code: 'MAINTENANCE' as const, until: null };
   return { canPlay: true as const, code: null, until: null };
+}
+
+/**
+ * For play that is NOT a new wager but still counts as "play" (e.g. slot free
+ * spins awarded by an earlier paid spin). Checks account status, cooldowns /
+ * self-exclusion, maintenance and game availability — but not stake, limits
+ * or balance. Bonus state is preserved while blocked.
+ */
+export async function assertPlayAllowed(tx: Tx, input: { userId: string; game: GameKey; variant?: string; now?: Date }) {
+  const res = await checkWagerEligibility(tx, {
+    userId: input.userId,
+    game: input.game,
+    variant: input.variant,
+    amount: 1n,
+    minBet: null,
+    maxBet: null,
+    balance: 1n,
+    now: input.now,
+  });
+  if (!res.ok && res.code !== 'DAILY_WAGER_LIMIT' && res.code !== 'DAILY_LOSS_LIMIT') {
+    throw new AppError(res.code, res.message, res.details);
+  }
 }

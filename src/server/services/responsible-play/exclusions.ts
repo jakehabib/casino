@@ -35,6 +35,16 @@ export function computeEndsAt(type: SelfExclusionType, start: Date): Date | null
   return null; // indefinite
 }
 
+/** "October 13, 2026 at 4:32 PM EDT" in the user's responsible-play timezone. */
+function formatInZone(d: Date, tz: string) {
+  try {
+    return new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeStyle: 'short', timeZone: tz }).format(d) +
+      ` (${tz})`;
+  } catch {
+    return d.toUTCString();
+  }
+}
+
 export function exclusionKind(type: SelfExclusionType): ExclusionKind {
   return EXCLUSION_OPTIONS[type].kind;
 }
@@ -107,13 +117,14 @@ export async function createExclusion(userId: string, type: SelfExclusionType, n
     const exclusion = await tx.selfExclusion.create({
       data: { userId, type, startsAt: now, endsAt, status: 'ACTIVE' },
     });
+    const rp = await tx.responsiblePlaySettings.findUnique({ where: { userId }, select: { timezone: true } });
     await tx.notification.create({
       data: {
         userId,
         type: 'LIMIT',
         title: EXCLUSION_OPTIONS[type].label + ' started',
         body: endsAt
-          ? `Casino play is disabled until ${endsAt.toUTCString()}.`
+          ? `Casino play is disabled until ${formatInZone(endsAt, rp?.timezone ?? 'UTC')}.`
           : 'Casino play is disabled indefinitely. Contact support to request a review.',
         link: '/responsible-play',
       },
@@ -122,14 +133,32 @@ export async function createExclusion(userId: string, type: SelfExclusionType, n
   });
 }
 
-/** Indefinite exclusions only: the user may request a reinstatement review. */
-export async function requestReinstatement(userId: string) {
+/**
+ * Indefinite exclusions only: the user may request a reinstatement review.
+ * Idempotent — a repeated request returns the existing pending review without
+ * resetting its timestamp (which starts the minimum waiting period).
+ */
+export async function requestReinstatement(userId: string, now = new Date()) {
   const ex = await prisma.selfExclusion.findFirst({
-    where: { userId, type: 'EXCLUSION_INDEFINITE', status: 'ACTIVE' },
+    where: { userId, type: 'EXCLUSION_INDEFINITE', status: { in: ['ACTIVE', 'REINSTATEMENT_REQUESTED'] } },
+    orderBy: { createdAt: 'desc' },
   });
   if (!ex) throw new AppError('NOT_ELIGIBLE', 'No indefinite self-exclusion to review.');
-  return prisma.selfExclusion.update({
-    where: { id: ex.id },
-    data: { status: 'REINSTATEMENT_REQUESTED', reinstatementRequestedAt: new Date() },
+  if (ex.status === 'REINSTATEMENT_REQUESTED') return ex;
+  const claimed = await prisma.selfExclusion.updateMany({
+    where: { id: ex.id, status: 'ACTIVE' },
+    data: { status: 'REINSTATEMENT_REQUESTED', reinstatementRequestedAt: now },
   });
+  if (claimed.count === 1) {
+    await prisma.notification.create({
+      data: {
+        userId,
+        type: 'LIMIT',
+        title: 'Review requested',
+        body: 'Your request to review your indefinite self-exclusion has been received. Play stays disabled while it is reviewed.',
+        link: '/responsible-play',
+      },
+    });
+  }
+  return prisma.selfExclusion.findUniqueOrThrow({ where: { id: ex.id } });
 }

@@ -147,10 +147,16 @@ export async function verifyWalletIntegrity(userId: string) {
   return { ok, balance, ledgerSum };
 }
 
-export async function listTransactions(userId: string, opts: { take?: number; cursor?: string } = {}) {
+export async function listTransactions(userId: string, opts: { take?: number; cursor?: string; types?: TransactionType[] } = {}) {
   const take = Math.min(opts.take ?? 25, 100);
+  const where = { userId, ...(opts.types?.length ? { type: { in: opts.types } } : {}) };
+  // The cursor must be one of this user's rows (matching the filter).
+  if (opts.cursor) {
+    const anchor = await prisma.walletTransaction.findFirst({ where: { ...where, id: opts.cursor }, select: { id: true } });
+    if (!anchor) return { items: [], nextCursor: null };
+  }
   const rows = await prisma.walletTransaction.findMany({
-    where: { userId },
+    where,
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: take + 1,
     ...(opts.cursor ? { cursor: { id: opts.cursor }, skip: 1 } : {}),

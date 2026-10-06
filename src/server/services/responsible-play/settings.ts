@@ -2,7 +2,7 @@ import type { LimitType, ResponsiblePlaySettings } from '@prisma/client';
 import { prisma, type Tx } from '@/server/db';
 import { AppError } from '@/lib/errors';
 import { getSetting } from '@/server/services/settings/settings-service';
-import { isValidTimeZone } from '@/lib/time';
+import { isValidTimeZone, localDateAsUtcDate } from '@/lib/time';
 import { toNum } from '@/lib/money';
 
 type Db = Tx | typeof prisma;
@@ -97,18 +97,49 @@ export async function requestLimitChange(userId: string, limitType: LimitType, n
   });
 }
 
-export async function cancelPendingChange(userId: string, changeId: string) {
+export async function cancelPendingChange(userId: string, changeId: string, now = new Date()) {
   const res = await prisma.responsiblePlayLimitChange.updateMany({
-    where: { id: changeId, userId, status: 'PENDING', effectiveAt: { gt: new Date() } },
-    data: { status: 'CANCELLED', resolvedAt: new Date() },
+    where: { id: changeId, userId, status: 'PENDING', effectiveAt: { gt: now } },
+    data: { status: 'CANCELLED', resolvedAt: now },
   });
   if (res.count !== 1) throw new AppError('ACTION_UNAVAILABLE', 'That change can no longer be cancelled.');
 }
 
-export async function setTimezone(userId: string, timezone: string) {
+/**
+ * Change the responsible-play timezone (which defines "today" for limits).
+ *
+ * Hardening: switching to a timezone where the local date differs must not
+ * hand the user a fresh, empty "today" (which would be a trivial way around a
+ * daily limit). Today's totals are carried over to the new timezone's current
+ * local date, keeping the more conservative figures, in the same transaction
+ * (serialised with wagers via the wallet lock).
+ */
+export async function setTimezone(userId: string, timezone: string, now = new Date()) {
   if (!isValidTimeZone(timezone)) throw new AppError('VALIDATION', 'Unknown timezone');
-  await ensureSettings(prisma, userId);
-  await prisma.responsiblePlaySettings.update({ where: { userId }, data: { timezone } });
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Wallet" WHERE "userId" = ${userId} FOR UPDATE`;
+    const settings = await getEffectiveSettings(tx, userId, now);
+    if (settings.timezone === timezone) return;
+    const oldDate = localDateAsUtcDate(settings.timezone, now);
+    const newDate = localDateAsUtcDate(timezone, now);
+    await tx.responsiblePlaySettings.update({ where: { userId }, data: { timezone } });
+    if (oldDate.getTime() === newDate.getTime()) return;
+    const [from, into] = await Promise.all([
+      tx.dailyPlayAggregate.findUnique({ where: { userId_date: { userId, date: oldDate } } }),
+      tx.dailyPlayAggregate.findUnique({ where: { userId_date: { userId, date: newDate } } }),
+    ]);
+    if (!from || (from.wagered === 0n && from.won === 0n)) return;
+    const max = (a: bigint, b: bigint) => (a > b ? a : b);
+    const wagered = max(from.wagered, into?.wagered ?? 0n);
+    const lost = max(from.lost, into?.lost ?? 0n);
+    const won = lost > 0n ? wagered - lost : max(from.won, into?.won ?? 0n);
+    const data = { wagered, won, lost, net: won - wagered };
+    await tx.dailyPlayAggregate.upsert({
+      where: { userId_date: { userId, date: newDate } },
+      create: { userId, date: newDate, ...data },
+      update: data,
+    });
+  });
 }
 
 export function serializeLimitChange(c: {

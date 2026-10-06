@@ -40,3 +40,31 @@ export function multiplierX100At(elapsedMs: number): number {
 export function timeForMultiplier(x100: number): number {
   return Math.log(x100 / 100) / CRASH_GROWTH_K;
 }
+
+/** Fixed public salt mixed into every round's crash point (documented on /fairness). */
+export const CRASH_SALT = 'nova-launch-v1';
+
+/** Absolute server time (ms) at which a round with this crash point ends. */
+export function crashTimeMs(startedAt: number, crashPointX100: number): number {
+  return startedAt + timeForMultiplier(crashPointX100);
+}
+
+/**
+ * Authoritative "can this still be cashed out?" check. The multiplier is read
+ * from elapsed time; reaching the crash point (or the crash instant) loses —
+ * ties at the crash point lose.
+ */
+export function isBeforeCrash(elapsedMs: number, crashPointX100: number): boolean {
+  if (elapsedMs < 0) return false;
+  return multiplierX100At(elapsedMs) < crashPointX100 && elapsedMs < timeForMultiplier(crashPointX100);
+}
+
+/** Gross payout for a cash-out (integer Credits, floored). */
+export function crashPayout(amount: bigint, cashoutX100: number): bigint {
+  return (amount * BigInt(cashoutX100)) / 100n;
+}
+
+/** Visual tier for a crash point: grey < 2×, accent ≥ 2×, gold ≥ 10×. */
+export function crashTier(x100: number): 'low' | 'mid' | 'high' {
+  return x100 >= 1000 ? 'high' : x100 >= 200 ? 'mid' : 'low';
+}

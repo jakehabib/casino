@@ -27,6 +27,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Allows parallel dev servers (one per distDir), e.g. NEXT_DIST_DIR=.next-alt PORT=3101
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   poweredByHeader: false,
   reactStrictMode: true,
   serverExternalPackages: ['@node-rs/argon2', 'pino', 'ioredis', 'socket.io'],

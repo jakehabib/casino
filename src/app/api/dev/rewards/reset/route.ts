@@ -1,0 +1,5 @@
+import { z } from 'zod';
+import { route } from '@/server/api/handler';
+import { devResetRewards, requireDevUser } from '@/server/services/admin/dev-tools';
+
+export const POST = route({ body: z.object({}).optional() }, async ({ user }) => devResetRewards(requireDevUser(user).id));

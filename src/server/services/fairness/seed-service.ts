@@ -106,3 +106,13 @@ export async function rotateSeed(userId: string, newClientSeed?: string) {
 export async function findRevealedSeed(userId: string, seedHash: string) {
   return prisma.serverSeed.findFirst({ where: { userId, seedHash, status: 'REVEALED' } });
 }
+
+/**
+ * Fairness block for a settled single-player round. The server seed is only
+ * included once that seed pair has been rotated (REVEALED).
+ */
+export async function fairnessInfo(userId: string, seedHash: string, clientSeed: string, nonce: number) {
+  const seed = await prisma.serverSeed.findFirst({ where: { userId, seedHash }, select: { status: true, seed: true } });
+  const revealed = seed?.status === 'REVEALED';
+  return { serverSeedHash: seedHash, clientSeed, nonce, serverSeed: revealed ? seed!.seed : null, revealed };
+}
