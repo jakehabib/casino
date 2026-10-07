@@ -38,5 +38,10 @@ process.on('unhandledRejection', (err) => logger.error({ err }, 'unhandledReject
 
 main().catch((err) => {
   logger.fatal({ err }, 'failed to start');
+  // Also print plainly: some log viewers only show the message field.
+  console.error('[nova] FAILED TO START:', err instanceof Error ? err.stack ?? err.message : err);
+  if (err instanceof Error && /MaxRetriesPerRequest|ECONNREFUSED|ENOTFOUND|EAI_AGAIN/.test(`${err.name} ${err.message}`)) {
+    console.error('[nova] Could not reach Redis. Check that REDIS_URL points at your Redis service (on Railway: Variables -> REDIS_URL = ${{Redis.REDIS_URL}}).');
+  }
   process.exit(1);
 });

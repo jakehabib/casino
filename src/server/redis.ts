@@ -7,6 +7,8 @@ function make(): Redis {
     maxRetriesPerRequest: 3,
     enableOfflineQueue: true,
     lazyConnect: false,
+    // Resolve both IPv4 and IPv6 (Railway private networking is IPv6-only).
+    family: 0,
   });
   client.on('error', () => {
     /* surfaced via health checks + logger at call sites */
