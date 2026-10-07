@@ -59,9 +59,12 @@ async function main() {
   }
   // Owner account for a fresh deployment: ADMIN_EMAIL + ADMIN_PASSWORD (+ ADMIN_USERNAME).
   if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-    if (process.env.ADMIN_PASSWORD.length < 10) throw new Error('ADMIN_PASSWORD must be at least 10 characters');
-    await upsertUser(process.env.ADMIN_USERNAME || 'Owner', process.env.ADMIN_EMAIL.toLowerCase(), process.env.ADMIN_PASSWORD, 'SUPER_ADMIN', 100_000n);
-    console.log(`Owner account ready: ${process.env.ADMIN_EMAIL}`);
+    if (process.env.ADMIN_PASSWORD.length < 10) {
+      console.warn('[nova] WARNING: ADMIN_PASSWORD is shorter than 10 characters — owner account NOT created. Use a longer password in Variables and redeploy.');
+    } else {
+      await upsertUser(process.env.ADMIN_USERNAME || 'Owner', process.env.ADMIN_EMAIL.toLowerCase(), process.env.ADMIN_PASSWORD, 'SUPER_ADMIN', 100_000n);
+      console.log(`Owner account ready: ${process.env.ADMIN_EMAIL}`);
+    }
   }
   console.log('Seed complete.');
 }

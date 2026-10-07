@@ -18,6 +18,6 @@ fi
 echo "[nova] applying database migrations..."
 ./node_modules/.bin/prisma migrate deploy
 echo "[nova] seeding settings / owner account..."
-./node_modules/.bin/tsx prisma/seed.ts
+./node_modules/.bin/tsx prisma/seed.ts || echo "[nova] WARNING: seeding failed (see above) — starting anyway."
 echo "[nova] starting server..."
 exec ./node_modules/.bin/tsx server.ts
