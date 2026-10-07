@@ -13,3 +13,4 @@ blob-report
 next-env.d.ts
 /simulation-results
 .next-*
+dump.rdb
