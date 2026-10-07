@@ -1,8 +1,16 @@
 import { z } from 'zod';
+import { normalizeAppUrl } from '@/lib/app-url';
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  APP_URL: z.string().default('http://localhost:3000'),
+  APP_URL: z
+    .string()
+    .optional()
+    .transform((v) => {
+      const n = normalizeAppUrl(v);
+      if (v && !n) console.warn(`[nova] WARNING: APP_URL "${v}" is not a valid web address; ignoring it.`);
+      return n ?? 'http://localhost:3000';
+    }),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   AUTH_SECRET: z.string().min(16).default('dev-only-insecure-secret-change-me'),

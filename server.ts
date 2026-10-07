@@ -7,6 +7,7 @@ import { createServer } from 'node:http';
 import next from 'next';
 import { createSocketServer } from '@/server/socket/server';
 import { logger } from '@/server/logger';
+import { normalizeAppUrl } from '@/lib/app-url';
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
@@ -20,7 +21,7 @@ async function main() {
     req.headers['x-nova-peer-ip'] = req.socket.remoteAddress ?? '';
     void handle(req, res);
   });
-  await createSocketServer(http, { origin: process.env.APP_URL ?? `http://localhost:${port}` });
+  await createSocketServer(http, { origin: normalizeAppUrl(process.env.APP_URL) ?? `http://localhost:${port}` });
   http.listen(port, () => {
     logger.info({ port, dev }, `NOVA ready on http://localhost:${port}`);
   });

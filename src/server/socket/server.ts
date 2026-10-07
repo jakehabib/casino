@@ -24,7 +24,13 @@ export async function createSocketServer(http: HttpServer, opts: { origin: strin
   // Cookie-based session auth. Guests may connect (read-only lobby, chat, crash spectating).
   // Cross-site WebSocket hijacking guard: CORS does not apply to the websocket
   // transport, so reject browser handshakes from any other origin explicitly.
-  const allowedOrigin = new URL(opts.origin).host;
+  const allowedOrigin = (() => {
+    try {
+      return new URL(opts.origin).host;
+    } catch {
+      return null;
+    }
+  })();
   io.use((socket, next) => {
     const origin = socket.handshake.headers.origin;
     if (!origin) return next(); // non-browser clients (no ambient cookies to abuse)
