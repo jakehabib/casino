@@ -15,9 +15,9 @@ FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
-  && useradd --system --uid 1001 nova
+  && useradd --system --create-home --uid 1001 nova
 COPY --from=build --chown=nova:nova /app /app
 USER nova
 EXPOSE 3000
 # Apply migrations, seed settings/owner account (idempotent), then start Next.js + Socket.IO
-CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx prisma/seed.ts && npx tsx server.ts"]
+CMD ["sh", "scripts/docker-start.sh"]
